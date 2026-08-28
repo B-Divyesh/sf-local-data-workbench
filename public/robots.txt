@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://local-data-workbench.sociobot.in/sitemap.xml
