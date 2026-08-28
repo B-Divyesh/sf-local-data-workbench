@@ -1,0 +1,29 @@
+{
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": ["/assets/*", "/privacy/*", "/terms/*", "/*.sh", "/*.ps1", "/*.xml", "/*.txt"]
+  },
+  "routes": [
+    {
+      "route": "/assets/*",
+      "headers": { "cache-control": "public, max-age=31536000, immutable" }
+    },
+    {
+      "route": "/sw.js",
+      "headers": { "cache-control": "no-cache" }
+    },
+    {
+      "route": "/install.sh",
+      "headers": { "content-type": "text/plain; charset=utf-8", "cache-control": "public, max-age=300" }
+    },
+    {
+      "route": "/install.ps1",
+      "headers": { "content-type": "text/plain; charset=utf-8", "cache-control": "public, max-age=300" }
+    }
+  ],
+  "globalHeaders": {
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "Permissions-Policy": "camera=(), microphone=(), geolocation=()"
+  }
+}

@@ -96,7 +96,7 @@ jobs:
           arm_file="$(find . -maxdepth 1 -iname '*aarch64*.dmg' -printf '%f\n' | head -n1)"
           x64_file="$(find . -maxdepth 1 -name '*.dmg' ! -iname '*aarch64*' -printf '%f\n' | head -n1)"
           test -n "$linux_file" && test -n "$windows_file" && test -n "$arm_file" && test -n "$x64_file"
-          asset_json() { file="$1"; hash="$(sha256sum "$file" | cut -d' ' -f1)"; jq -n --arg name "$file" --arg url "https://github.com/$GITHUB_REPOSITORY/releases/download/$RELEASE_TAG/$file" --arg sha256 "$hash" '{name:$name,url:$url,sha256:$sha256}'; }
+          asset_json() { file="$1"; hash="$(sha256sum "$file" | cut -d' ' -f1)"; encoded="$(jq -rn --arg value "$file" '$value|@uri')"; jq -n --arg name "$file" --arg url "https://github.com/$GITHUB_REPOSITORY/releases/download/$RELEASE_TAG/$encoded" --arg sha256 "$hash" '{name:$name,url:$url,sha256:$sha256}'; }
           jq -n --arg version "$RELEASE_TAG" --argjson linux "$(asset_json "$linux_file")" --argjson windows "$(asset_json "$windows_file")" --argjson arm "$(asset_json "$arm_file")" --argjson x64 "$(asset_json "$x64_file")" '{version:$version,platforms:{linux:$linux,windows:$windows,"mac-arm64":$arm,"mac-x64":$x64}}' > latest.json
           jq empty latest.json
       - name: Attach verification files
