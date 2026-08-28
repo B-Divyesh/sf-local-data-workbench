@@ -38,6 +38,10 @@ Verified locally on 2026-08-28:
 
 `.github/workflows/release.yml` runs on `v*` tags and manual dispatch. It uses Tauri's action to build four jobs (macOS arm64, macOS x64, Windows x64, Linux x64), attaches artifacts with `softprops/action-gh-release`, then publishes `SHA256SUMS` and a valid `latest.json`. The site and one-line installers consume that manifest.
 
+Release `v0.1.0` is live at <https://github.com/B-Divyesh/sf-local-data-workbench/releases/tag/v0.1.0>. The successful release run produced `.dmg` packages for Apple silicon and Intel, `.msi` and `.exe` packages for Windows, and `.AppImage`, `.deb`, and `.rpm` packages for Linux. `latest.json` contains live per-platform URLs and hashes. A clean download of `Local.Data.Workbench_0.1.0_amd64.deb` passed verification against the published `SHA256SUMS` (`OK`).
+
+GitHub's `releases/latest/download/latest.json` response does not include browser CORS headers. The shell and PowerShell installers consume that canonical manifest directly; the static landing page uses GitHub's CORS-enabled latest-release API to resolve the same live assets and exposes the published `latest.json` and `SHA256SUMS` alongside them. No proxy or third-party runtime service is used.
+
 ## Known boundaries
 
 - Standard JSON arrays are capped at 256 MB because serde must materialize the root array; JSON Lines is the supported streaming form for larger JSON data.
