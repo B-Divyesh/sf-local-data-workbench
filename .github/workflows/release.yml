@@ -41,7 +41,7 @@ jobs:
             files: |
               src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
           - label: macOS Intel
-            os: macos-13
+            os: macos-latest
             target: x86_64-apple-darwin
             args: '--target x86_64-apple-darwin'
             files: |
