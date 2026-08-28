@@ -1,0 +1,7 @@
+{
+  "use_case": "stylized-concept",
+  "asset_type": "landing-page hero editorial illustration",
+  "model": "factory-image Azure deployment via /opt/fleet/lib/gen-image.sh",
+  "date": "2026-08-28",
+  "prompt": "A wide editorial still life for a local data transformation desktop application. On a matte black typesetter's table, one long folded strip of warm off-white continuous-feed archival paper travels through a compact blackened-steel mechanical typesetter at the far right. The paper contains only abstract graphite rows, columns, crop marks, tiny squares, and punched edges—absolutely no readable letters, numbers, or words. A single restrained oxblood cotton thread traces from the raw grid at left through the mechanism to a clean ordered grid at right, suggesting reproducible lineage. Raking side light, crisp newsprint texture, subtle graphite dust, handmade cut-paper realism, 50mm editorial product photography, high contrast monochrome with warm paper and one oxblood accent. Wide 3:2 composition with generous quiet paper field on the left and the machine on the right. No people, no hands, no screens, no legible text, no letters, no logos, no brands, no watermark, no glossy 3D, no neon, no gradients, no blue light, no fantasy machinery."
+}

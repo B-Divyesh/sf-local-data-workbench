@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Local Data Workbench app icon</title>
+  <desc id="desc">A folded paper grid crossed by an oxblood thread</desc>
+  <rect width="512" height="512" rx="96" fill="#171715"/>
+  <path d="M74 122h364v268H74z" fill="#f2efe6"/>
+  <path d="M165 122v268M256 122v268M347 122v268M74 189h364M74 256h364M74 323h364" stroke="#625f57" stroke-width="8" opacity=".55"/>
+  <path d="M74 287c56-34 100-39 152-5 50 32 95 32 136-2 23-19 47-23 76-12" fill="none" stroke="#8d211e" stroke-width="18" stroke-linecap="round"/>
+  <circle cx="74" cy="287" r="12" fill="#8d211e"/><circle cx="438" cy="268" r="12" fill="#8d211e"/>
+</svg>

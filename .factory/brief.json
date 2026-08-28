@@ -1,0 +1,11 @@
+{
+  "slug": "local-data-workbench",
+  "title": "Local Data Workbench",
+  "territory": "devtools-data",
+  "user": "Analysts and engineers who need to inspect or reshape a multi-GB CSV, JSON, or Parquet file without uploading it or writing a one-off script.",
+  "smallest_useful_product": "Signed desktop app opening CSV/JSON/Parquet locally, profiling columns, applying named filters/joins/transforms, and saving a portable recipe plus output.",
+  "success_measure": "In a 30-day pilot, 60% of users reopen a saved recipe and reproduce an output without editing code.",
+  "artifact_class": "desktop-app",
+  "monetization": "one-time",
+  "constraints": "Process files locally by default; bounded memory/previewing; disclose native query-engine licenses; never phone home with filenames or contents."
+}
