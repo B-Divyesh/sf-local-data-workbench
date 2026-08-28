@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f2efe6" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="description" content="Inspect and reshape local CSV, JSON, and Parquet files with reproducible recipes." />
+    <title>Local Data Workbench</title>
+    <script type="module" src="/src/app.ts"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to data preview</a>
+    <div id="app-shell">
+      <header class="masthead">
+        <div class="brand-block">
+          <span class="edition">Private edition · local only</span>
+          <h1>Local Data<br />Workbench</h1>
+        </div>
+        <div class="mast-meta" aria-label="Application status">
+          <span id="connection-state">Offline-ready</span>
+          <span id="license-badge">Free desk</span>
+          <button class="text-button" id="license-button" type="button">License</button>
+        </div>
+      </header>
+
+      <div class="workbench-layout">
+        <aside class="rail source-rail" aria-labelledby="source-heading">
+          <section>
+            <p class="section-number">01 / Source</p>
+            <h2 id="source-heading">Open a local file</h2>
+            <p class="muted small">CSV, JSON, JSONL, or Parquet. Contents never leave this device.</p>
+            <button class="primary full" id="open-file" type="button">Choose source file</button>
+            <input class="visually-hidden" id="browser-file" type="file" aria-label="Choose source file in browser preview" accept=".csv,.json,.jsonl,.ndjson,.parquet" />
+            <div id="source-card" class="source-card empty" aria-live="polite">
+              <span class="source-mark" aria-hidden="true">∅</span>
+              <strong>No edition open</strong>
+              <span>Choose a file to begin.</span>
+            </div>
+          </section>
+
+          <section class="recipe-section" aria-labelledby="recipe-heading">
+            <div class="section-title-row">
+              <div>
+                <p class="section-number">02 / Recipe</p>
+                <h2 id="recipe-heading">Transformation docket</h2>
+              </div>
+              <button class="icon-button" id="add-step" type="button" aria-label="Add recipe step" disabled>+</button>
+            </div>
+            <ol id="recipe-list" class="recipe-list">
+              <li class="recipe-empty">No steps yet. Your source remains unchanged.</li>
+            </ol>
+            <div class="button-pair">
+              <button class="secondary" id="open-recipe" type="button">Open recipe</button>
+              <button class="secondary" id="save-recipe" type="button" disabled>Save recipe</button>
+            </div>
+          </section>
+        </aside>
+
+        <main id="main" tabindex="-1">
+          <div class="preview-head">
+            <div>
+              <p class="section-number">03 / Preview galley</p>
+              <h2 id="preview-title">Awaiting a source</h2>
+            </div>
+            <div class="preview-actions">
+              <span id="sample-badge" class="sample-badge">0 rows</span>
+              <label class="visually-hidden" for="export-format">Export format</label>
+              <select id="export-format" class="compact-select" aria-label="Export format" disabled>
+                <option value="csv">CSV</option>
+                <option value="jsonl">JSON Lines · licensed</option>
+              </select>
+              <button class="secondary" id="export-data" type="button" disabled>Export result</button>
+            </div>
+          </div>
+
+          <div id="empty-state" class="empty-state">
+            <div class="ledger-glyph" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+            <h2>Put a file on the desk.</h2>
+            <p>Inspect types and missing values, add named transformations, then save both the recipe and its deterministic output.</p>
+            <button class="primary" id="empty-open" type="button">Choose source file</button>
+            <p class="key-hint"><kbd>Ctrl</kbd> <span>+</span> <kbd>O</kbd></p>
+          </div>
+
+          <div id="loading-state" class="loading-state" hidden aria-live="polite">
+            <div class="loading-rule"></div>
+            <h2>Reading the edition…</h2>
+            <p>Profiling runs locally with a bounded preview.</p>
+          </div>
+
+          <div id="error-state" class="error-state" hidden role="alert">
+            <p class="section-number">Could not open source</p>
+            <h2 id="error-title">The file could not be read.</h2>
+            <p id="error-detail">Check that its format matches the extension, then try again.</p>
+            <button class="secondary" id="error-open" type="button">Choose another file</button>
+          </div>
+
+          <div id="table-region" class="table-region" hidden tabindex="0" aria-label="Data preview, scroll horizontally for more columns">
+            <table id="data-table"></table>
+          </div>
+          <p id="preview-note" class="preview-note" hidden></p>
+        </main>
+
+        <aside class="rail profile-rail" aria-labelledby="profile-heading">
+          <p class="section-number">04 / Column report</p>
+          <h2 id="profile-heading">Profile</h2>
+          <p id="profile-intro" class="muted small">Column types and quality notes appear after opening a source.</p>
+          <div id="profile-list" class="profile-list"></div>
+          <section class="privacy-note">
+            <strong>Local means local.</strong>
+            <p>No upload, telemetry, filename collection, or content logging. License checks send only the license token.</p>
+          </section>
+        </aside>
+      </div>
+
+      <footer class="app-footer">
+        <span id="status" role="status" aria-live="polite">Ready for a local file.</span>
+        <span class="folio">Edition 001 · v0.1.0</span>
+      </footer>
+    </div>
+
+    <dialog id="step-dialog" aria-labelledby="step-title">
+      <form method="dialog" id="step-form">
+        <div class="dialog-head">
+          <div><p class="section-number">New docket item</p><h2 id="step-title">Add transformation</h2></div>
+          <button class="icon-button" value="cancel" aria-label="Close dialog" type="submit">×</button>
+        </div>
+        <label for="step-kind">Operation</label>
+        <select id="step-kind" name="kind">
+          <option value="filter">Filter rows</option>
+          <option value="derive">Create column</option>
+          <option value="rename">Rename column</option>
+          <option value="select">Keep columns</option>
+          <option value="join">Join another file</option>
+        </select>
+        <div id="step-fields"></div>
+        <p id="step-error" class="form-error" role="alert"></p>
+        <div class="dialog-actions">
+          <button class="secondary" value="cancel" type="submit">Cancel</button>
+          <button class="primary" id="confirm-step" value="default" type="button">Add to recipe</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="license-dialog" aria-labelledby="license-title">
+      <form method="dialog" id="license-form">
+        <div class="dialog-head">
+          <div><p class="section-number">One-time desk license</p><h2 id="license-title">Unlock the full workbench</h2></div>
+          <button class="icon-button" value="cancel" aria-label="Close dialog" type="submit">×</button>
+        </div>
+        <p>Pay once to unlock unlimited saved recipes, local joins, and JSON Lines export. CSV inspection, transformations, recipe reuse, and export stay free.</p>
+        <p class="price"><strong>$29</strong> one-time purchase</p>
+        <a class="primary link-button" href="https://api.sociobot.in/api/v1/products/local-data-workbench/checkout" target="_blank" rel="noreferrer">Buy a license</a>
+        <hr />
+        <label for="license-token">Have a license? Paste it here</label>
+        <textarea id="license-token" rows="3" autocomplete="off" spellcheck="false"></textarea>
+        <p id="license-notice" class="muted" role="status"></p>
+        <div class="dialog-actions">
+          <button class="secondary" value="cancel" type="submit">Close</button>
+          <button class="primary" id="verify-license" value="default" type="button">Verify license</button>
+        </div>
+        <p class="legal-small">Sociobot/Dodo is merchant of record. Refunds are handled there and revoke the license. <a href="https://local-data-workbench.sociobot.in/privacy" target="_blank">Privacy</a> · <a href="https://local-data-workbench.sociobot.in/terms" target="_blank">Terms</a></p>
+      </form>
+    </dialog>
+  </body>
+</html>
