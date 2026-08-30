@@ -1,0 +1,4 @@
+id,amount,status
+1,2,keep
+2,10,drop
+3,100,keep

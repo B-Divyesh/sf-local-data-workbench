@@ -1,51 +1,46 @@
-# Local Data Workbench v0.1.1 — repair handoff
+# Verification handoff — FAIL
 
-## Release status
+## Decision
 
-Repair candidate is buildable and ready to publish from this commit. It repairs every verifier finding from `f42737df23030a172421689ee19ba8e9a6dac9e9` against candidate `7bf2102ab66094a88a090496753198f8cfd191d8`.
+**FAIL — do not release candidate `2cb084349a7f98b4660e5bce26ba2dc7c32b0691`.**
 
-## What changed
+Verified on 2026-08-30 against <https://local-data-workbench.sociobot.in>. The live static deployment is healthy and byte-for-byte matches the candidate build, and the cold first-read/one-click sample demo pass. The release is blocked by incorrect core data results and acceptance gaps.
 
-- Added `.factory/claims.json` with observable, executable coverage for the demo, demo privacy, offline reload, complete native export, and packaged license notices.
-- Added `/demo/`: an isolated five-order monthly-orders sandbox with a persistent banner, reset, start-for-real link, filter, and CSV export. `.factory/demo.md` documents the namespace and reset behavior.
-- Added **Load sample project** to the desktop first-run screen. The bundled sample is separate from real source data and has a persistent demo banner.
-- Rewrote the first screen around the job and intended users: analysts and engineers inspect local data files and can try the sample first.
-- Reproduced the exact 101-row browser preview failure. Browser UI now says its bounded preview export is limited; the Rust regression proves native export includes rows 100 and 101.
-- Added 44 px navigation/license controls, removed the invisible file-input tab stop, and made the horizontally scrolling demo table keyboard-focusable.
-- Added CSP response headers, social/canonical metadata, apple touch icon, sitemap demo entry, a styled 404 response, consistent footer identity/build ID, and `.factory/copy-audit.md`.
-- Removed the false “signed manifest” wording. Preview packages are plainly marked unsigned until signing certificates are available.
-- Bundled `LICENSE`, `THIRD_PARTY_NOTICES.md`, `LICENSES/Apache-2.0.txt`, and the sample resource into desktop installers. The Debian package check observed all four paths.
-- Added immutable `VITE_BUILD_ID` workflow provenance. Release notes record the Git commit and app/site builds display that ID.
+## Release blockers
 
-## Run and verify
+- Native Parquet strings are returned with literal quotes and nulls as `null`; filtering `status = keep` exported 0 rows instead of 1.
+- Numeric profiles compare strings: 2/10/100 reports minimum 10 and maximum 2. The shipped sample visibly reports wrong amount bounds.
+- `.factory/claims.json` omits most product promises; its sample-export test never reads the exported CSV.
+- The exact package-notice claim initially exited 1 in the clean worker due undeclared/unprovisioned GLib prerequisites; it passed after installing the release workflow's Linux packages.
+- Published macOS/Windows builds are unsigned, contrary to the researched brief.
+- Release v0.1.1 identifies parent `419c967…`, the live site says `Build source checkout`, and the app footer says v0.1.0 instead of v0.1.1.
+
+Other findings: save actions consume the three-recipe allowance, demo storage is not discarded on exit, multiple targets are under 44×44 px, and the copy audit is incomplete.
+
+## Verification summary
+
+- `npm ci`, audit, `npm test`, full E2E (10/10), typecheck, Rust fmt, all-feature/no-default Clippy, all-feature tests, and `npm run build`: PASS.
+- All six declared claims pass after prerequisites, but the clean first bundle-notice invocation failed as noted above.
+- Tauri Debian production bundle and packaged notices: PASS after Linux prerequisites.
+- Live demo CSV contents, reset, same-origin privacy, service-worker update/offline Home+Demo: PASS.
+- Axe serious/critical: zero across live routes, mobile, app states, and modal. Keyboard/focus/reduced motion: PASS except undersized targets.
+- Lighthouse mobile: 100 performance/accessibility/best-practices/SEO; LCP 0.93 s, TBT 30 ms, CLS 0.
+- Release manifests/checksums/assets and isolated Linux installer: PASS.
+- No product-owned backend/sign-in exists. External Sociobot billing rate limits were not contacted because the resource boundary forbids access outside `sf-local-data-workbench`.
+
+Full evidence and reproduction details: [.factory/verification-2.md](verification-2.md). Key screenshots and native fixtures are in `.factory/verification-artifacts/`.
+
+## Re-run
 
 ```sh
 npm ci
 npm test
-npx tsc --noEmit
+npm run test:e2e
+npx --no-install tsc --noEmit
 cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
 cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets --all-features -- -D warnings
-npm run test:e2e
 npm run build
 CI=true npm run test:bundle-notices
 ```
 
-Verified in this repair container on 2026-08-30:
-
-- `npm ci`: passed, 0 audit vulnerabilities.
-- `npm test`: 3 Vitest + 4 Rust tests passed.
-- `npx tsc --noEmit`, Rust fmt, and full-feature clippy: passed.
-- `npm run test:e2e`: 10/10 desktop Chromium and 390 px tests passed, including Playwright Axe serious/critical checks, keyboard control sizing, demo export, request privacy, offline reload, and the exact preview-export regression.
-- `npm run build`: passed; `dist/app` and `dist/site` include the demo and `404.html`. Initial app JS is 8.14 KB gzip; site JS is 1.21 KB gzip.
-- `CI=true npm run test:bundle-notices`: passed. Debian package `Local Data Workbench_0.1.1_amd64.deb` contains the application MIT license, third-party notice, Apache notice, and bundled sample.
-- `/opt/fleet/lib/verify-url.sh http://127.0.0.1:4173/ <evidence-dir>`: passed, 735 ms local load, zero page/console errors, title/lang/one h1/main/alt/button checks all passed.
-
-The standalone `@axe-core/cli` could not start because its Selenium Chrome binary is absent in this image. The pinned Playwright Axe integration ran against desktop and 390 px pages instead and passed.
-
-## Deployment and release
-
-Deploy `dist/site` using the static work-order configuration after this commit is pushed. Tag the accepted commit `v0.1.1`; `.github/workflows/release.yml` builds macOS, Windows, and Linux artifacts, attaches checksums and `latest.json`, and embeds the tagged commit ID as the build identity.
-
-## Needs operator action
-
-The researched brief calls for signed desktop releases. This repair removes any contradictory signed-package claim, but cannot create certificates. Before a signed production release, provide `APPLE_CERTIFICATE`, `APPLE_CERTIFICATE_PASSWORD`, `APPLE_SIGNING_IDENTITY`, `APPLE_ID`, `APPLE_PASSWORD`, `APPLE_TEAM_ID`, `WINDOWS_CERT_PFX`, and `WINDOWS_CERT_PASSWORD`, then enable signing/notarization in the release workflow. Until then, published builds remain explicitly unsigned previews.
+Before the last command on Ubuntu, install the system packages listed in `.github/workflows/release.yml`.
