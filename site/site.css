@@ -24,7 +24,7 @@ h1 { margin:0; max-width:760px; font:700 clamp(54px,7.2vw,106px)/.86 var(--displ
 .button { min-height:48px; display:inline-flex; align-items:center; justify-content:center; padding:12px 18px; border:1px solid var(--ink); font-weight:700; text-decoration:none; }
 .button.primary { color:var(--paper); border-color:var(--accent); background:var(--accent); }
 .button.primary:hover { background:var(--accent-dark); }
-.text-link { font-weight:700; }
+.text-link { min-height:44px; display:inline-flex; align-items:center; font-weight:700; }
 .download-detail { min-height:20px; margin:12px 0 0; color:var(--muted); font-size:12px; }
 .hero-art { position:relative; margin:0; min-height:500px; overflow:hidden; background:var(--ink); }
 .hero-art picture,.hero-art img { width:100%; height:100%; }
@@ -77,8 +77,9 @@ h3 { margin:0 0 8px; font:700 24px/1.1 var(--display); }
 .download-grid article:last-child { border:0; }
 .platform-mark { font:48px/1 var(--display); }
 .download-grid p { min-height:48px; color:var(--muted); }
-.download-grid a { margin:5px 0; font-weight:700; }
-.download-grid code { display:block; width:100%; margin:14px 0; padding:10px; overflow:auto; border:1px solid var(--rule); background:var(--news); font-size:11px; white-space:nowrap; }
+.download-grid a { min-height:44px; display:inline-flex; align-items:center; margin:5px 0; font-weight:700; }
+.download-grid code { display:block; width:100%; min-height:44px; margin:14px 0; padding:13px 10px; overflow:auto; border:1px solid var(--rule); background:var(--news); font-size:11px; white-space:nowrap; }
+.release-state a { min-height:44px; display:inline-flex; align-items:center; }
 .download-grid small { margin-top:auto; padding-top:18px; color:var(--muted); line-height:1.45; }
 .release-state { color:var(--muted); font-size:13px; }
 .faq { display:grid; grid-template-columns:.6fr 1.4fr; gap:clamp(40px,8vw,120px); }

@@ -6,6 +6,7 @@ const orders: Order[] = [
   ['1003', 'North', 'shipped', '241.25'], ['1004', 'South', 'cancelled', '61.00'], ['1005', 'West', 'shipped', '199.99']
 ];
 const BUILD_ID = import.meta.env.VITE_BUILD_ID ?? 'source checkout';
+const APP_VERSION = import.meta.env.VITE_APP_VERSION ?? '0.1.2';
 const $ = <T extends Element>(selector: string): T => {
   const element = document.querySelector<T>(selector);
   if (!element) throw new Error(`Missing ${selector}`);
@@ -32,5 +33,5 @@ function exportSample(): void {
 $('#apply-filter').addEventListener('click', filter);
 $('#export-sample').addEventListener('click', exportSample);
 $('#reset-demo').addEventListener('click', () => { $<HTMLSelectElement>('#status-filter').value = 'all'; visible = [...orders]; render(); });
-document.querySelectorAll<HTMLElement>('[data-build-id]').forEach((element) => { element.textContent = BUILD_ID; });
+document.querySelectorAll<HTMLElement>('[data-build-id]').forEach((element) => { element.textContent = `${APP_VERSION} · ${BUILD_ID}`; });
 render();

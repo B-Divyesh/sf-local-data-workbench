@@ -24,6 +24,7 @@ const licenseDialog = $<HTMLDialogElement>('#license-dialog');
 const browserFile = $<HTMLInputElement>('#browser-file');
 const exportFormat = $<HTMLSelectElement>('#export-format');
 const BUILD_ID = import.meta.env.VITE_BUILD_ID ?? 'source checkout';
+const APP_VERSION = import.meta.env.VITE_APP_VERSION ?? '0.1.2';
 
 const sampleData: TableData = {
   headers: ['order_id', 'region', 'status', 'amount'],
@@ -158,6 +159,7 @@ async function acceptDataset(summary: DatasetSummary): Promise<void> {
 }
 
 async function openSource(): Promise<void> {
+  if (demoMode) discardDemoStorage();
   demoMode = false;
   $<HTMLElement>('#demo-banner').hidden = true;
   if (!isTauri()) { browserFile.click(); return; }
@@ -204,7 +206,9 @@ function inferProfiles(data: TableData) {
     const values = data.rows.map((row) => row[index] ?? '');
     const present = values.filter((value) => value.trim());
     const inferred_type = present.length === 0 ? 'empty' : present.every((value) => /^-?\d+$/.test(value)) ? 'integer' : present.every((value) => Number.isFinite(Number(value))) ? 'decimal' : present.every((value) => /^(true|false)$/i.test(value)) ? 'boolean' : 'text';
-    const sorted = [...present].sort();
+    const sorted = inferred_type === 'integer' || inferred_type === 'decimal'
+      ? [...present].sort((left, right) => Number(left) - Number(right))
+      : [...present].sort();
     return { name, inferred_type, null_count: values.length - present.length, distinct_count: new Set(present).size, distinct_is_estimate: false, min: sorted[0], max: sorted.at(-1) } as DatasetSummary['profiles'][number];
   });
 }
@@ -274,11 +278,30 @@ function currentRecipe(name?: string): Recipe {
   return { schema: 'local-data-workbench/recipe@1', name: name ?? `${dataset.name} recipe`, created_at: now, updated_at: now, source: { path: dataset.path, name: dataset.name, format: dataset.format, fingerprint: dataset.fingerprint }, steps };
 }
 
+function savedRecipeKeys(storageKey: string): string[] {
+  try {
+    const value = JSON.parse(localStorage.getItem(storageKey) ?? '[]');
+    return Array.isArray(value) && value.every((item) => typeof item === 'string') ? value : [];
+  } catch { return []; }
+}
+
+function recipeKey(): string {
+  if (!dataset) return '';
+  // Saving the same recipe again updates that file; it must not consume another
+  // free recipe slot. The key deliberately ignores timestamps and save location.
+  return JSON.stringify({ source: dataset.fingerprint, steps });
+}
+
+function discardDemoStorage(): void {
+  Object.keys(localStorage).filter((key) => key.startsWith('demo:')).forEach((key) => localStorage.removeItem(key));
+}
+
 async function saveRecipe(): Promise<void> {
   if (!dataset) return;
-  const savedRecipeKey = demoMode ? 'demo:ldw:saved-recipes' : 'ldw:saved-recipes';
-  const savedCount = Number(localStorage.getItem(savedRecipeKey) ?? '0');
-  if (!unlocked && savedCount >= 3) { $('#license-notice').textContent = 'The free desk includes three saved recipes. A one-time license removes the limit.'; licenseDialog.showModal(); return; }
+  const savedRecipeKey = demoMode ? 'demo:ldw:saved-recipe-keys' : 'ldw:saved-recipe-keys';
+  const existingKeys = savedRecipeKeys(savedRecipeKey);
+  const currentKey = recipeKey();
+  if (!unlocked && !existingKeys.includes(currentKey) && existingKeys.length >= 3) { $('#license-notice').textContent = 'The free desk includes three saved recipes. A one-time license removes the limit.'; licenseDialog.showModal(); return; }
   const contents = `${JSON.stringify(currentRecipe(), null, 2)}\n`;
   if (isTauri()) {
     const destination = await save({ defaultPath: `${dataset.name.replace(/\.[^.]+$/, '')}.ldw.json`, filters: [{ name: 'Workbench recipe', extensions: ['ldw.json', 'json'] }] });
@@ -289,7 +312,7 @@ async function saveRecipe(): Promise<void> {
     const anchor = document.createElement('a'); anchor.href = URL.createObjectURL(new Blob([contents], { type: 'application/json' })); anchor.download = `${dataset.name}.ldw.json`; anchor.click(); URL.revokeObjectURL(anchor.href);
     setStatus('Saved portable recipe.');
   }
-  localStorage.setItem(savedRecipeKey, String(savedCount + 1));
+  if (!existingKeys.includes(currentKey)) localStorage.setItem(savedRecipeKey, JSON.stringify([...existingKeys, currentKey]));
 }
 
 async function openRecipe(): Promise<void> {
@@ -343,7 +366,7 @@ function bindEvents(): void {
   ['#open-file', '#empty-open', '#error-open'].forEach((selector) => $(selector).addEventListener('click', openSource));
   $('#load-sample').addEventListener('click', () => void loadSample());
   $('#reset-demo').addEventListener('click', () => void loadSample());
-  $('#start-real').addEventListener('click', () => { location.href = location.pathname; });
+  $('#start-real').addEventListener('click', () => { discardDemoStorage(); location.href = location.pathname; });
   browserFile.addEventListener('change', () => { const file = browserFile.files?.[0]; if (file) void handleBrowserFile(file); });
   $('#add-step').addEventListener('click', () => { joinPath = ''; renderStepFields(); stepDialog.showModal(); });
   $('#step-kind').addEventListener('change', renderStepFields);
@@ -366,7 +389,7 @@ function bindEvents(): void {
 }
 
 async function start(): Promise<void> {
-  $('#build-id').textContent = BUILD_ID;
+  $('#build-id').textContent = `${APP_VERSION} · ${BUILD_ID}`;
   const directDemo = location.search.includes('demo=1');
   if (!directDemo) captureReturnedLicense();
   unlocked = directDemo ? false : optimisticUnlock();

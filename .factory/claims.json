@@ -1,44 +1,20 @@
 [
-  {
-    "id": "sample-demo",
-    "claim": "Try the product with sample data in one click",
-    "where": "landing page and desktop first-run screen",
-    "test": "npm run test:e2e -- --grep @claim:sample-demo",
-    "sandbox": "fresh browser context; open the landing page and assert the visible demo link"
-  },
-  {
-    "id": "sample-export",
-    "claim": "The demo filters and exports its sample CSV",
-    "where": "demo page walkthrough",
-    "test": "npm run test:e2e -- --grep @claim:sample-export",
-    "sandbox": "fresh browser context; filter shipped sample orders and inspect the CSV download"
-  },
-  {
-    "id": "local-only-demo",
-    "claim": "The demo does not send sample data to another origin",
-    "where": "landing facts and demo banner",
-    "test": "npm run test:e2e -- --grep @claim:local-only-demo",
-    "sandbox": "record every request during a complete demo filter flow; assert same-origin only"
-  },
-  {
-    "id": "offline-reload",
-    "claim": "The landing page reloads offline after its first visit",
-    "where": "service worker behavior",
-    "test": "npm run test:e2e -- --grep @claim:offline-reload",
-    "sandbox": "new browser context; visit once, await service worker, set offline, then reload"
-  },
-  {
-    "id": "desktop-complete-export",
-    "claim": "The desktop app exports matching rows beyond its 100-row preview",
-    "where": "desktop preview and README",
-    "test": "cargo test --manifest-path src-tauri/Cargo.toml --no-default-features claim_desktop_complete_export",
-    "sandbox": "101-row CSV; filter amount greater than 99; assert rows 100 and 101 are written"
-  },
-  {
-    "id": "bundled-license-notices",
-    "claim": "Desktop installers include application and native license notices",
-    "where": "landing FAQ and README",
-    "test": "CI=true npm run test:bundle-notices",
-    "sandbox": "build a Debian installer and assert LICENSE, THIRD_PARTY_NOTICES.md, and Apache-2.0.txt are packaged"
-  }
+  {"id":"sample-demo","claim":"Try the product with sample data in one click","where":"landing page and desktop first-run screen","test":"npm run test:e2e -- --grep @claim:sample-demo","sandbox":"fresh browser context; open landing, enter the visible demo, and confirm its banner"},
+  {"id":"sample-export","claim":"The demo filters and exports its sample CSV","where":"demo page walkthrough","test":"npm run test:e2e -- --grep @claim:sample-export","sandbox":"fresh browser context; filter shipped orders and read the downloaded CSV bytes"},
+  {"id":"local-only-demo","claim":"The demo does not send sample data to another origin","where":"landing facts and demo banner","test":"npm run test:e2e -- --grep @claim:local-only-demo","sandbox":"record every request during a complete demo filter flow; assert same-origin only"},
+  {"id":"offline-reload","claim":"The landing page reloads offline after its first visit","where":"service worker behavior","test":"npm run test:e2e -- --grep @claim:offline-reload","sandbox":"new browser context; visit once, await service worker, set offline, then reload"},
+  {"id":"local-formats","claim":"The desktop engine opens and profiles CSV, JSON, JSON Lines, and Parquet files","where":"landing how-it-works section and README","test":"cargo test --manifest-path src-tauri/Cargo.toml --no-default-features claim_local_formats_open_and_profile_csv_json_json_lines_and_parquet","sandbox":"temporary local CSV, JSON, JSON Lines, and shipped Parquet fixture; assert rows, headers, and profiles"},
+  {"id":"numeric-profile-bounds","claim":"Profiles report numeric minimum and maximum values correctly","where":"landing profile description and desktop profile rail","test":"cargo test --manifest-path src-tauri/Cargo.toml --no-default-features claim_numeric_profile_bounds_use_numeric_order_instead_of_text_order","sandbox":"temporary integer and decimal values 2, 10, 100 and shipped sample-scale decimals"},
+  {"id":"parquet-profile-filter-export","claim":"Parquet strings and missing values can be profiled, filtered, and exported","where":"desktop format support and README","test":"cargo test --manifest-path src-tauri/Cargo.toml --no-default-features claim_parquet_strings_nulls_filter_and_export_as_native_cells","sandbox":"three-row shipped regression fixture with keep/null/drop strings; assert preview, profile, filter, and CSV bytes"},
+  {"id":"named-transformations","claim":"The desktop app applies named filters, derived columns, renames, and selections","where":"landing how-it-works and README","test":"npm run test:unit -- --testNamePattern @claim:named-transformations","sandbox":"ordered source fixture; apply filter, derived column, rename, and selection, then inspect the result"},
+  {"id":"local-joins","claim":"A full-desk license enables local keyed joins","where":"landing how-it-works and license dialog","test":"cargo test --manifest-path src-tauri/Cargo.toml --no-default-features joins_reference_data_by_named_key","sandbox":"two temporary local CSVs; assert named-key join columns and unmatched blank cells"},
+  {"id":"portable-recipes","claim":"Recipes save and reopen as portable JSON with source identity and ordered steps","where":"landing saved-recipe section and README","test":"npm run test:unit -- --testNamePattern @claim:portable-recipes","sandbox":"serialize and reopen a recipe fixture, then replay its ordered filter"},
+  {"id":"desktop-complete-export","claim":"The desktop app exports matching rows beyond its 100-row preview","where":"desktop preview and README","test":"cargo test --manifest-path src-tauri/Cargo.toml --no-default-features claim_desktop_complete_export","sandbox":"101-row CSV; filter amount greater than 99; assert rows 100 and 101 are written"},
+  {"id":"free-saved-recipes","claim":"Saving the same recipe again does not consume another free recipe slot","where":"license dialog and landing price section","test":"npm run test:e2e -- --grep @claim:free-saved-recipes","sandbox":"browser app demo; save the unchanged recipe twice and inspect its isolated saved-recipe keys"},
+  {"id":"free-and-paid-features","claim":"CSV transforms remain free while joins and JSON Lines export require a license","where":"license dialog and landing price section","test":"npm run test:e2e -- --grep @claim:free-and-paid-features","sandbox":"browser app demo; inspect export label and attempt a join"},
+  {"id":"demo-exit-discard","claim":"Leaving the desktop demo discards its isolated storage","where":"desktop demo banner","test":"npm run test:e2e -- --grep @claim:demo-exit-discard","sandbox":"browser app demo; seed demo storage, start for real, then assert no demo namespace remains"},
+  {"id":"touch-targets","claim":"Important touch controls are at least 44 CSS pixels","where":"landing downloads and desktop toolbar","test":"npm run test:e2e -- --grep @claim:touch-targets","sandbox":"desktop and 390px browser projects; measure download, license, and add-step controls"},
+  {"id":"installer-checksums","claim":"One-line installers verify SHA-256 before installing","where":"landing download section and README","test":"npm run test:unit -- --testNamePattern @claim:installer-checksums","sandbox":"read both shipped installer scripts and assert their platform hash verification commands"},
+  {"id":"bundled-license-notices","claim":"Desktop installers include application and native license notices","where":"landing FAQ and README","test":"CI=true npm run test:bundle-notices","sandbox":"clean Ubuntu worker provisions Tauri packages, builds a Debian installer, and asserts LICENSE, THIRD_PARTY_NOTICES.md, and Apache-2.0.txt"},
+  {"id":"build-identity","claim":"Built site and desktop app show their version and immutable source revision","where":"site and app footers","test":"npm run test:e2e -- --grep @claim:build-identity","sandbox":"development build injects the current Git revision; assert both footers omit the source-checkout placeholder"}
 ]

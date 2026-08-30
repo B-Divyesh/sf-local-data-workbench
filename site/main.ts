@@ -2,6 +2,7 @@ import './site.css';
 
 const RELEASE_API = 'https://api.github.com/repos/B-Divyesh/sf-local-data-workbench/releases/latest';
 const BUILD_ID = import.meta.env.VITE_BUILD_ID ?? 'source checkout';
+const APP_VERSION = import.meta.env.VITE_APP_VERSION ?? '0.1.2';
 
 interface PlatformAsset { url: string; sha256?: string; name?: string }
 interface Manifest { version: string; platforms: Record<string, PlatformAsset> }
@@ -81,7 +82,7 @@ async function loadRelease(): Promise<void> {
   }
 }
 
-document.querySelectorAll<HTMLElement>('[data-build-id]').forEach((element) => { element.textContent = BUILD_ID; });
+document.querySelectorAll<HTMLElement>('[data-build-id]').forEach((element) => { element.textContent = `${APP_VERSION} · ${BUILD_ID}`; });
 void loadRelease();
 
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === '127.0.0.1' || location.hostname === 'localhost')) {

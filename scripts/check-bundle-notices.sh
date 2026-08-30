@@ -1,6 +1,7 @@
 #!/bin/sh
 # @claim:bundled-license-notices
 set -eu
+sh scripts/ensure-tauri-linux-deps.sh
 CI=true npm run tauri build -- --bundles deb
 PACKAGE="$(find src-tauri/target/release/bundle/deb -name '*.deb' -print -quit)"
 test -n "$PACKAGE"

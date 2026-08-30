@@ -1,5 +1,12 @@
 import { defineConfig } from 'vite';
+import { execFileSync } from 'node:child_process';
 import { resolve } from 'node:path';
+
+function buildId(): string {
+  if (process.env.VITE_BUILD_ID) return process.env.VITE_BUILD_ID;
+  try { return execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(); }
+  catch { return 'unversioned-source'; }
+}
 
 export default defineConfig({
   root: 'site',
@@ -18,5 +25,9 @@ export default defineConfig({
         notFound: resolve(import.meta.dirname, 'site/404.html')
       }
     }
+  },
+  define: {
+    'import.meta.env.VITE_BUILD_ID': JSON.stringify(buildId()),
+    'import.meta.env.VITE_APP_VERSION': JSON.stringify(process.env.npm_package_version ?? '0.1.2')
   }
 });

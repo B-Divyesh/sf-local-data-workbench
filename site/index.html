@@ -72,7 +72,7 @@
         <div class="recipe-copy">
           <p class="eyebrow">Saved recipe</p>
           <h2 id="recipe-title">Keep each transformation in a JSON recipe.</h2>
-          <p>Every step has a name, inputs, and a fixed position. The portable JSON recipe carries a source fingerprint and schema version, so the transformation can be inspected outside the app and replayed without code.</p>
+          <p>Every step has a name, inputs, and a fixed position. The JSON recipe carries a source fingerprint and schema version for review and replay.</p>
           <ul class="ticks"><li>Readable, diffable JSON</li><li>Source identity and format</li><li>Ordered transformation docket</li><li>No proprietary cloud project</li></ul>
         </div>
         <figure class="recipe-sheet" aria-label="Example transformation recipe">
@@ -96,7 +96,7 @@
         <div class="privacy-mark" aria-hidden="true">LOCAL<br />ONLY</div>
         <div>
           <p class="eyebrow">A boring privacy policy, by design</p>
-          <h2 id="privacy-title">Nothing to breach because nothing was sent.</h2>
+          <h2 id="privacy-title">File work stays on your device.</h2>
           <p>The app does not include analytics, account sync, or content logging. File work stays on your device. A paid license check sends its token, not a filename or file content.</p>
           <a class="text-link" href="/privacy/">Read the plain-language privacy notice →</a>
         </div>
@@ -123,8 +123,8 @@
         </header>
         <div class="download-grid">
           <article><span class="platform-mark" aria-hidden="true">⌘</span><h3>macOS</h3><p>Apple silicon and Intel disk images.</p><a data-platform="mac-arm64" href="https://github.com/B-Divyesh/sf-local-data-workbench/releases/latest">Apple silicon</a><a data-platform="mac-x64" href="https://github.com/B-Divyesh/sf-local-data-workbench/releases/latest">Intel</a><small>Unsigned: right-click the app, then choose Open.</small></article>
-          <article><span class="platform-mark" aria-hidden="true">⊞</span><h3>Windows</h3><p>Windows 10/11 installer.</p><a data-platform="windows" href="https://github.com/B-Divyesh/sf-local-data-workbench/releases/latest">Download installer</a><code tabindex="0">irm https://local-data-workbench.sociobot.in/install.ps1 | iex</code><small>Unsigned preview; Windows may show a SmartScreen notice.</small></article>
-          <article><span class="platform-mark" aria-hidden="true">#</span><h3>Linux</h3><p>AppImage and Debian package.</p><a data-platform="linux" href="https://github.com/B-Divyesh/sf-local-data-workbench/releases/latest">Download AppImage</a><code tabindex="0">curl -fsSL https://local-data-workbench.sociobot.in/install.sh | sh</code><small>The installer verifies SHA-256 before placing the AppImage in ~/.local/bin.</small></article>
+          <article><span class="platform-mark" aria-hidden="true">⊞</span><h3>Windows</h3><p>Windows 10/11 installer.</p><a data-platform="windows" href="https://github.com/B-Divyesh/sf-local-data-workbench/releases/latest">Download installer</a><code>irm https://local-data-workbench.sociobot.in/install.ps1 | iex</code><small>Unsigned preview; Windows may show a SmartScreen notice.</small></article>
+          <article><span class="platform-mark" aria-hidden="true">#</span><h3>Linux</h3><p>AppImage and Debian package.</p><a data-platform="linux" href="https://github.com/B-Divyesh/sf-local-data-workbench/releases/latest">Download AppImage</a><code>curl -fsSL https://local-data-workbench.sociobot.in/install.sh | sh</code><small>The installer verifies SHA-256 before placing the AppImage in ~/.local/bin.</small></article>
         </div>
         <p id="release-state" class="release-state" role="status">Checking the latest published checksums…</p>
         <p class="release-state">Verify a download: <a href="https://github.com/B-Divyesh/sf-local-data-workbench/releases/latest/download/latest.json">latest.json</a> · <a href="https://github.com/B-Divyesh/sf-local-data-workbench/releases/latest/download/SHA256SUMS">SHA256SUMS</a></p>

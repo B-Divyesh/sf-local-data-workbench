@@ -1,6 +1,6 @@
 {
   "name": "local-data-workbench",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,7 +9,8 @@
     "build": "npm run build:app && npm run build:site",
     "build:app": "vite build --config vite.app.config.ts",
     "build:site": "vite build --config vite.site.config.ts",
-    "test": "vitest run && npm run test:rust",
+    "test": "npm run test:unit && npm run test:rust",
+    "test:unit": "vitest run",
     "test:rust": "cargo test --manifest-path src-tauri/Cargo.toml --no-default-features",
     "test:e2e": "playwright test",
     "test:bundle-notices": "sh scripts/check-bundle-notices.sh",

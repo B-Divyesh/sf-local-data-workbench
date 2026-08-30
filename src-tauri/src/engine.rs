@@ -1,4 +1,5 @@
 use parquet::file::reader::{FileReader, SerializedFileReader};
+use parquet::record::Field;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 use sha2::{Digest, Sha256};
@@ -110,8 +111,10 @@ struct ProfileAccumulator {
     null_count: u64,
     distinct: HashSet<String>,
     distinct_capped: bool,
-    min: Option<String>,
-    max: Option<String>,
+    lexical_min: Option<String>,
+    lexical_max: Option<String>,
+    numeric_min: Option<(f64, String)>,
+    numeric_max: Option<(f64, String)>,
 }
 
 impl ProfileAccumulator {
@@ -121,8 +124,10 @@ impl ProfileAccumulator {
             null_count: 0,
             distinct: HashSet::new(),
             distinct_capped: false,
-            min: None,
-            max: None,
+            lexical_min: None,
+            lexical_max: None,
+            numeric_min: None,
+            numeric_max: None,
         }
     }
 
@@ -140,18 +145,37 @@ impl ProfileAccumulator {
             self.distinct_capped = true;
         }
         if self
-            .min
+            .lexical_min
             .as_deref()
             .map_or(true, |current| trimmed < current)
         {
-            self.min = Some(trimmed.to_owned());
+            self.lexical_min = Some(trimmed.to_owned());
         }
         if self
-            .max
+            .lexical_max
             .as_deref()
             .map_or(true, |current| trimmed > current)
         {
-            self.max = Some(trimmed.to_owned());
+            self.lexical_max = Some(trimmed.to_owned());
+        }
+        if matches!(detected, ValueKind::Integer | ValueKind::Decimal) {
+            // `detect_kind` only accepts finite numbers. Keep the original spelling for
+            // display/export while comparing the actual numeric value for profile bounds.
+            let numeric = trimmed.parse::<f64>().expect("detected numeric value");
+            if self
+                .numeric_min
+                .as_ref()
+                .map_or(true, |(current, _)| numeric < *current)
+            {
+                self.numeric_min = Some((numeric, trimmed.to_owned()));
+            }
+            if self
+                .numeric_max
+                .as_ref()
+                .map_or(true, |(current, _)| numeric > *current)
+            {
+                self.numeric_max = Some((numeric, trimmed.to_owned()));
+            }
         }
     }
 
@@ -165,14 +189,22 @@ impl ProfileAccumulator {
             ValueKind::Text => "text",
         }
         .to_owned();
+        let (min, max) = if matches!(self.kind, ValueKind::Integer | ValueKind::Decimal) {
+            (
+                self.numeric_min.map(|(_, value)| value),
+                self.numeric_max.map(|(_, value)| value),
+            )
+        } else {
+            (self.lexical_min, self.lexical_max)
+        };
         ColumnProfile {
             name,
             inferred_type,
             null_count: self.null_count,
             distinct_count: self.distinct.len(),
             distinct_is_estimate: sampled || self.distinct_capped,
-            min: self.min,
-            max: self.max,
+            min,
+            max,
         }
     }
 }
@@ -180,7 +212,7 @@ impl ProfileAccumulator {
 fn detect_kind(value: &str) -> ValueKind {
     if value.parse::<i64>().is_ok() {
         ValueKind::Integer
-    } else if value.parse::<f64>().is_ok() {
+    } else if value.parse::<f64>().is_ok_and(f64::is_finite) {
         ValueKind::Decimal
     } else if matches!(value.to_ascii_lowercase().as_str(), "true" | "false") {
         ValueKind::Boolean
@@ -387,6 +419,37 @@ fn parquet_headers(path: &Path) -> Result<Vec<String>, String> {
     }
 }
 
+/// Convert Parquet's typed record field into the same cell representation used by
+/// CSV and JSON. `Display` is deliberately not used: it renders UTF-8 fields with
+/// quotes and a null as the literal word "null", which changes filtering and
+/// profiling semantics.
+fn parquet_value_string(field: &Field) -> String {
+    match field {
+        Field::Null => String::new(),
+        Field::Str(value) => value.clone(),
+        Field::Bool(value) => value.to_string(),
+        Field::Byte(value) => value.to_string(),
+        Field::Short(value) => value.to_string(),
+        Field::Int(value) => value.to_string(),
+        Field::Long(value) => value.to_string(),
+        Field::UByte(value) => value.to_string(),
+        Field::UShort(value) => value.to_string(),
+        Field::UInt(value) => value.to_string(),
+        Field::ULong(value) => value.to_string(),
+        Field::Float16(value) => value.to_string(),
+        Field::Float(value) => value.to_string(),
+        Field::Double(value) => value.to_string(),
+        Field::Date(value) => value.to_string(),
+        Field::TimeMillis(value) => value.to_string(),
+        Field::TimeMicros(value) => value.to_string(),
+        Field::TimestampMillis(value) => value.to_string(),
+        Field::TimestampMicros(value) => value.to_string(),
+        // Complex values and binary/decimal values retain Parquet's stable record
+        // rendering. Only strings and nulls have different cell semantics.
+        value => value.to_string(),
+    }
+}
+
 fn source_headers(path: &Path, format: &str) -> Result<Vec<String>, String> {
     match format {
         "csv" => csv_headers(path),
@@ -476,7 +539,7 @@ where
                 count += 1;
                 if !callback(
                     row.get_column_iter()
-                        .map(|(_, field)| field.to_string())
+                        .map(|(_, field)| parquet_value_string(field))
                         .collect(),
                 )? {
                     break;
@@ -935,6 +998,75 @@ mod tests {
         assert_eq!(summary.profiles[2].inferred_type, "decimal");
     }
 
+    // @claim:local-formats
+    #[test]
+    fn claim_local_formats_open_and_profile_csv_json_json_lines_and_parquet() {
+        let dir = tempdir().unwrap();
+        let csv = dir.path().join("records.csv");
+        let json = dir.path().join("records.json");
+        let jsonl = dir.path().join("records.jsonl");
+        fs::write(&csv, "id,status\n1,keep\n").unwrap();
+        fs::write(&json, r#"[{"id":2,"status":"keep"}]"#).unwrap();
+        fs::write(&jsonl, "{\"id\":3,\"status\":\"keep\"}\n").unwrap();
+        let parquet = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../.factory/verification-artifacts/native-sample.parquet");
+        for source in [&csv, &json, &jsonl, &parquet] {
+            let summary = analyze_file(source.to_str().unwrap()).unwrap();
+            assert!(!summary.headers.is_empty());
+            assert!(summary.row_count > 0);
+            assert_eq!(summary.headers.len(), summary.profiles.len());
+        }
+    }
+
+    // @claim:numeric-profile-bounds
+    #[test]
+    fn claim_numeric_profile_bounds_use_numeric_order_instead_of_text_order() {
+        let dir = tempdir().unwrap();
+        let path = dir.path().join("numbers.csv");
+        fs::write(&path, "integer,decimal\n2,124.50\n10,88.00\n100,241.25\n").unwrap();
+        let summary = analyze_file(path.to_str().unwrap()).unwrap();
+        assert_eq!(summary.profiles[0].inferred_type, "integer");
+        assert_eq!(summary.profiles[0].min.as_deref(), Some("2"));
+        assert_eq!(summary.profiles[0].max.as_deref(), Some("100"));
+        assert_eq!(summary.profiles[1].min.as_deref(), Some("88.00"));
+        assert_eq!(summary.profiles[1].max.as_deref(), Some("241.25"));
+    }
+
+    // @claim:parquet-profile-filter-export
+    #[test]
+    fn claim_parquet_strings_nulls_filter_and_export_as_native_cells() {
+        let fixture = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../.factory/verification-artifacts/native-sample.parquet");
+        let dir = tempdir().unwrap();
+        let output = dir.path().join("filtered.csv");
+        let summary = analyze_file(fixture.to_str().unwrap()).unwrap();
+        assert_eq!(summary.headers, vec!["id", "amount", "status"]);
+        assert_eq!(summary.rows[0], vec!["1", "2", "keep"]);
+        assert_eq!(summary.rows[1], vec!["2", "10", ""]);
+        assert_eq!(summary.rows[2], vec!["3", "100", "drop"]);
+        let status = &summary.profiles[2];
+        assert_eq!(status.null_count, 1);
+        assert_eq!(status.min.as_deref(), Some("drop"));
+        assert_eq!(status.max.as_deref(), Some("keep"));
+        let result = export_result(&ExportRequest {
+            source_path: fixture.to_string_lossy().into_owned(),
+            destination_path: output.to_string_lossy().into_owned(),
+            format: "csv".into(),
+            steps: vec![RecipeStep::Filter {
+                name: "Keep named status".into(),
+                column: "status".into(),
+                operator: "equals".into(),
+                value: "keep".into(),
+            }],
+        })
+        .unwrap();
+        assert_eq!(result.rows_written, 1);
+        assert_eq!(
+            fs::read_to_string(output).unwrap(),
+            "id,amount,status\n1,2,keep\n"
+        );
+    }
+
     #[test]
     fn applies_ordered_recipe_and_exports_every_matching_row() {
         let dir = tempdir().unwrap();
@@ -999,6 +1131,7 @@ mod tests {
         assert!(text.contains("101,101"));
     }
 
+    // @claim:local-joins
     #[test]
     fn joins_reference_data_by_named_key() {
         let dir = tempdir().unwrap();

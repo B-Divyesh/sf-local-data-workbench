@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { readFile } from 'node:fs/promises';
 
 test('@claim:sample-demo landing page has a one-click isolated sample path', async ({ page }) => {
   const errors: string[] = [];
@@ -27,7 +28,70 @@ test('@claim:sample-export demo filters and exports only the selected sample row
   await page.getByRole('button', { name: 'Export sample CSV' }).click();
   const file = await download;
   expect(await file.suggestedFilename()).toBe('monthly-orders-filtered.csv');
+  const downloadedPath = await file.path();
+  expect(downloadedPath).not.toBeNull();
+  expect(await readFile(downloadedPath!, 'utf8')).toBe([
+    '"order_id","region","status","amount"',
+    '"1001","North","shipped","124.50"',
+    '"1003","North","shipped","241.25"',
+    '"1005","West","shipped","199.99"'
+  ].join('\n'));
   await expect(page.getByRole('status')).toContainText('Exported 3 sample orders');
+});
+
+test('@regression:numeric-profile-bounds browser profiles compare numeric values as numbers', async ({ page }) => {
+  await page.goto('http://127.0.0.1:1420/');
+  await page.locator('#browser-file').setInputFiles({
+    name: 'numbers.csv', mimeType: 'text/csv', buffer: Buffer.from('amount\n2\n10\n100\n')
+  });
+  const profile = page.locator('.profile-item').filter({ hasText: 'amount' });
+  await expect(profile).toContainText('Minimum2');
+  await expect(profile).toContainText('Maximum100');
+});
+
+test('@claim:free-saved-recipes saving the same recipe again uses one free recipe slot', async ({ page }) => {
+  await page.goto('http://127.0.0.1:1420/?demo=1');
+  await expect(page.locator('#demo-banner')).toBeVisible();
+  await page.getByRole('button', { name: 'Save recipe' }).click();
+  await page.getByRole('button', { name: 'Save recipe' }).click();
+  const keys = await page.evaluate(() => JSON.parse(localStorage.getItem('demo:ldw:saved-recipe-keys') ?? '[]'));
+  expect(keys).toHaveLength(1);
+});
+
+test('@claim:demo-exit-discard leaving desktop demo removes its isolated storage', async ({ page }) => {
+  await page.goto('http://127.0.0.1:1420/?demo=1');
+  await page.evaluate(() => localStorage.setItem('demo:ldw:saved-recipe-keys', '["sample"]'));
+  await page.getByRole('button', { name: 'Start for real' }).click();
+  await expect(page).toHaveURL('http://127.0.0.1:1420/');
+  expect(await page.evaluate(() => Object.keys(localStorage).filter((key) => key.startsWith('demo:')))).toEqual([]);
+});
+
+test('@claim:touch-targets important mobile controls are at least 44 pixels tall', async ({ page }) => {
+  await page.goto('http://127.0.0.1:4173/');
+  for (const control of ['#primary-download', '[data-platform="windows"]', '[data-platform="linux"]']) {
+    expect((await page.locator(control).boundingBox())?.height).toBeGreaterThanOrEqual(44);
+  }
+  await page.goto('http://127.0.0.1:1420/');
+  expect((await page.locator('#license-button').boundingBox())?.height).toBeGreaterThanOrEqual(44);
+  expect((await page.locator('#add-step').boundingBox())?.width).toBeGreaterThanOrEqual(44);
+});
+
+test('@claim:free-and-paid-features keeps CSV transforms free and marks paid options clearly', async ({ page }) => {
+  await page.goto('http://127.0.0.1:1420/?demo=1');
+  await expect(page.locator('#export-format')).toContainText('JSON Lines · license required');
+  await page.getByRole('button', { name: 'Add recipe step' }).click();
+  await page.locator('#step-kind').selectOption('join');
+  await page.getByRole('button', { name: 'Add to recipe' }).click();
+  await expect(page.getByRole('dialog', { name: /Unlock the full workbench/ })).toBeVisible();
+  await expect(page.getByText('CSV inspection, transformations, recipe reuse, and export stay free.')).toBeVisible();
+});
+
+test('@claim:build-identity built pages identify their version and source revision', async ({ page }) => {
+  await page.goto('http://127.0.0.1:4173/');
+  await expect(page.locator('[data-build-id]').last()).not.toContainText('source checkout');
+  await page.goto('http://127.0.0.1:1420/');
+  await expect(page.locator('#build-id')).not.toContainText('source checkout');
+  await expect(page.locator('#build-id')).toContainText('0.1.2');
 });
 
 test('@claim:local-only-demo demo sends no third-party requests', async ({ page }) => {

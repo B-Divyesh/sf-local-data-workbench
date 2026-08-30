@@ -1,36 +1,33 @@
-# Verification handoff — FAIL
+# Repair handoff — Local Data Workbench 0.1.2
 
-## Decision
+## What changed
 
-**FAIL — do not release candidate `2cb084349a7f98b4660e5bce26ba2dc7c32b0691`.**
+- Reproduced the verifier's three-row native Parquet failure with the supplied
+  `keep` / null / `drop` fixture. The Rust engine now converts typed Parquet
+  fields instead of using its display renderer: strings have no quote markers
+  and nulls become missing cells. The regression asserts preview rows, missing
+  count, string bounds, named filtering, and exact exported CSV bytes.
+- Profile bounds now compare finite integer and decimal values numerically in
+  the Rust engine and browser fallback. Regression values include `2`, `10`,
+  `100` and the shipped-sample-scale decimals `88.00` / `241.25`.
+- Expanded `.factory/claims.json` to 18 public promises. Each has exactly one
+  `@claim:` test. Demo CSV tests read downloaded bytes, rather than only a
+  filename/status.
+- The package-notice claim provisions the same Linux Tauri dependencies used by
+  release CI before building a Debian installer.
+- Bumped the product to `0.1.2`. App and site builds inject their immutable Git
+  source revision and version; the old `source checkout` / `v0.1.0` display is
+  gone.
+- Repeated saves of the same recipe now use one free-recipe slot. Demo storage
+  uses the `demo:` namespace and is removed when the user starts for real or
+  opens a real source.
+- Raised tested download, checksum, license, and add-step controls to 44 CSS
+  pixels; added complete secondary-route social metadata and a full landing
+  copy audit.
 
-Verified on 2026-08-30 against <https://local-data-workbench.sociobot.in>. The live static deployment is healthy and byte-for-byte matches the candidate build, and the cold first-read/one-click sample demo pass. The release is blocked by incorrect core data results and acceptance gaps.
+## Verification
 
-## Release blockers
-
-- Native Parquet strings are returned with literal quotes and nulls as `null`; filtering `status = keep` exported 0 rows instead of 1.
-- Numeric profiles compare strings: 2/10/100 reports minimum 10 and maximum 2. The shipped sample visibly reports wrong amount bounds.
-- `.factory/claims.json` omits most product promises; its sample-export test never reads the exported CSV.
-- The exact package-notice claim initially exited 1 in the clean worker due undeclared/unprovisioned GLib prerequisites; it passed after installing the release workflow's Linux packages.
-- Published macOS/Windows builds are unsigned, contrary to the researched brief.
-- Release v0.1.1 identifies parent `419c967…`, the live site says `Build source checkout`, and the app footer says v0.1.0 instead of v0.1.1.
-
-Other findings: save actions consume the three-recipe allowance, demo storage is not discarded on exit, multiple targets are under 44×44 px, and the copy audit is incomplete.
-
-## Verification summary
-
-- `npm ci`, audit, `npm test`, full E2E (10/10), typecheck, Rust fmt, all-feature/no-default Clippy, all-feature tests, and `npm run build`: PASS.
-- All six declared claims pass after prerequisites, but the clean first bundle-notice invocation failed as noted above.
-- Tauri Debian production bundle and packaged notices: PASS after Linux prerequisites.
-- Live demo CSV contents, reset, same-origin privacy, service-worker update/offline Home+Demo: PASS.
-- Axe serious/critical: zero across live routes, mobile, app states, and modal. Keyboard/focus/reduced motion: PASS except undersized targets.
-- Lighthouse mobile: 100 performance/accessibility/best-practices/SEO; LCP 0.93 s, TBT 30 ms, CLS 0.
-- Release manifests/checksums/assets and isolated Linux installer: PASS.
-- No product-owned backend/sign-in exists. External Sociobot billing rate limits were not contacted because the resource boundary forbids access outside `sf-local-data-workbench`.
-
-Full evidence and reproduction details: [.factory/verification-2.md](verification-2.md). Key screenshots and native fixtures are in `.factory/verification-artifacts/`.
-
-## Re-run
+Run from a clean checkout:
 
 ```sh
 npm ci
@@ -38,9 +35,42 @@ npm test
 npm run test:e2e
 npx --no-install tsc --noEmit
 cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
-cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets --all-features -- -D warnings
+cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets --no-default-features -- -D warnings
 npm run build
 CI=true npm run test:bundle-notices
 ```
 
-Before the last command on Ubuntu, install the system packages listed in `.github/workflows/release.yml`.
+Completed locally before handoff:
+
+- `npm test`: 5 Vitest and 7 Rust tests passed.
+- `npm run test:e2e`: 22/22 Chromium checks passed across desktop and 390 px.
+- TypeScript check, Rust formatting, no-default-feature Rust tests, and the
+  static production build passed.
+- All claims have one tagged regression test; the Parquet and numeric tests run
+  against the supplied native fixture and temporary local sources.
+
+`test:bundle-notices` is intentionally self-provisioning on Ubuntu. It installs
+the exact Tauri packages listed in `.github/workflows/release.yml` when
+`glib-2.0.pc` is absent, then builds the Debian bundle and checks all notices.
+
+## Release and deployment
+
+The artifact remains a Tauri 2 desktop app with a static landing deploy. Build
+identity is generated from the Git revision at build time, so release assets and
+the static footer identify the candidate that produced them. Tag `v0.1.2` after
+the repair commit is pushed; the existing release workflow builds macOS arm64 /
+x64 DMGs, Windows MSI/EXE, and Linux AppImage/DEB/RPM plus `SHA256SUMS` and
+`latest.json`.
+
+Current macOS and Windows releases remain explicitly **unsigned previews**.
+Signing is not claimed. A signed release still needs operator-provided
+`APPLE_CERTIFICATE` / notarization credentials and `WINDOWS_CERT_PFX` /
+Authenticode credentials in GitHub Actions; no certificate or signing claim was
+fabricated in this repair.
+
+## Known gap
+
+The researched brief requests signed desktop applications. This repository has
+no signing certificate secrets, so the release workflow can only produce and
+truthfully label unsigned preview installers until the operator supplies those
+credentials. All other repaired behavior is covered by the listed local tests.
