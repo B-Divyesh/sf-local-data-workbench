@@ -1,5 +1,19 @@
 # Local Data Workbench v0.1.0 — handoff
 
+## Independent verification status — FAIL (2026-08-30)
+
+Candidate `7bf2102ab66094a88a090496753198f8cfd191d8` at <https://local-data-workbench.sociobot.in> is **not accepted for release**. See [verification.md](verification.md) for full evidence.
+
+Release blockers:
+
+- `.factory/claims.json` and all required `@claim:` tests are missing.
+- There is no one-click sample-data demo, sample project, demo sandbox, or desktop walkthrough; `/demo` is only the landing page.
+- The cold first screen does not name the intended analysts/engineers and uses a privacy slogan as its headline.
+- Distributed macOS/Windows builds are unsigned despite the signed-desktop-app brief.
+- Published Linux packages do not contain the native/application license notices that the page says ship with the app.
+
+Additional defects include a browser-preview full-export contradiction, sub-44 px targets and an invisible keyboard tab stop, missing CSP/404/social metadata/copy audit, and release artifacts not tied to the candidate commit. Static deployment files do match the candidate byte-for-byte. Existing automated tests, production web/native builds, checksum verification, ordinary-load privacy checks, axe serious/critical checks, and performance budgets otherwise passed.
+
 ## What was built
 
 - Tauri 2 desktop application with a Rust local-processing core and a Vite/TypeScript interface.
