@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f2efe6" />
+    <meta name="description" content="Try Local Data Workbench with an isolated monthly-orders sample." />
+    <link rel="canonical" href="https://local-data-workbench.sociobot.in/demo/" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta property="og:title" content="Demo — Local Data Workbench" />
+    <meta property="og:description" content="Filter and export an isolated monthly-orders sample." />
+    <meta property="og:image" content="https://local-data-workbench.sociobot.in/assets/social-card.webp" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <title>Demo — Local Data Workbench</title>
+    <script type="module" src="/demo.ts"></script>
+  </head>
+  <body class="demo-page">
+    <a class="skip-link" href="#main">Skip to sample data</a>
+    <header class="site-header"><a class="wordmark" href="/"><span>Local Data</span><strong>Workbench</strong></a><nav aria-label="Primary navigation"><a href="/">Home</a><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a></nav></header>
+    <aside class="demo-banner" aria-label="Demo status"><strong>Demo — sample data, nothing is saved</strong><span>Monthly orders is stored only in this page.</span><button id="reset-demo" type="button">Reset demo</button><a href="/">Start for real</a></aside>
+    <main id="main" class="demo-main">
+      <p class="eyebrow">Sample project</p>
+      <h1>Filter monthly orders without touching a real file.</h1>
+      <p class="demo-intro">This is a working sample for analysts and engineers. Filter the sample, then export its transformed CSV.</p>
+      <section class="demo-controls" aria-label="Sample controls"><label for="status-filter">Show orders with status</label><select id="status-filter"><option value="all">All statuses</option><option value="shipped">Shipped</option><option value="pending">Pending</option><option value="cancelled">Cancelled</option></select><button id="apply-filter" class="button primary" type="button">Apply filter</button><button id="export-sample" class="button" type="button">Export sample CSV</button></section>
+      <p id="demo-status" role="status" aria-live="polite">Showing all 5 sample orders.</p>
+      <section class="demo-table-wrap" aria-labelledby="sample-title" tabindex="0"><h2 id="sample-title">monthly-orders.csv</h2><table><thead><tr><th>Order ID</th><th>Region</th><th>Status</th><th>Amount</th></tr></thead><tbody id="sample-rows"></tbody></table></section>
+      <section class="demo-next"><h2>Use the desktop app for your own file.</h2><p>The sample never reads or writes your files. The app adds Parquet support, native file dialogs, saved recipes, and complete-file exports.</p><a class="button primary" href="/#download">Download the desktop app</a></section>
+    </main>
+    <footer class="site-footer"><div class="wordmark"><span>Local Data</span><strong>Workbench</strong></div><p>Inspect and reshape local data files with saved recipes.</p><nav aria-label="Legal"><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a></nav><p>Built by Param Factory · Build <span data-build-id>source checkout</span></p></footer>
+  </body>
+</html>

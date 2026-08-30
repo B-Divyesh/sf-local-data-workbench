@@ -970,6 +970,35 @@ mod tests {
         assert!(!text.contains("Bob"));
     }
 
+    // @claim:desktop-complete-export
+    #[test]
+    fn claim_desktop_complete_export_includes_rows_beyond_the_preview() {
+        let dir = tempdir().unwrap();
+        let source = dir.path().join("source.csv");
+        let output = dir.path().join("result.csv");
+        let mut input = String::from("id,amount\n");
+        for value in 1..=101 {
+            input.push_str(&format!("{value},{value}\n"));
+        }
+        fs::write(&source, input).unwrap();
+        let result = export_result(&ExportRequest {
+            source_path: source.to_string_lossy().into_owned(),
+            destination_path: output.to_string_lossy().into_owned(),
+            format: "csv".into(),
+            steps: vec![RecipeStep::Filter {
+                name: "Values above 99".into(),
+                column: "amount".into(),
+                operator: "greater_than".into(),
+                value: "99".into(),
+            }],
+        })
+        .unwrap();
+        assert_eq!(result.rows_written, 2);
+        let text = fs::read_to_string(output).unwrap();
+        assert!(text.contains("100,100"));
+        assert!(text.contains("101,101"));
+    }
+
     #[test]
     fn joins_reference_data_by_named_key() {
         let dir = tempdir().unwrap();

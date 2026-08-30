@@ -1,19 +1,17 @@
 # Local Data Workbench
 
-Local Data Workbench is a private desktop tool for analysts and engineers who need to inspect or reshape large CSV, JSON, JSON Lines, or Parquet files without uploading them or writing a throwaway script.
+Local Data Workbench is a desktop tool for analysts and engineers who need to inspect or reshape CSV, JSON, JSON Lines, or Parquet files without writing a throwaway script.
 
-The durable output is a portable `.ldw.json` recipe: named, ordered filters, derived columns, renames, selections, and local joins that can be reopened to reproduce a complete CSV or JSON Lines export.
+Use the one-click [sample demo](https://local-data-workbench.sociobot.in/demo/) to filter monthly orders and export a sample CSV without touching a real file.
 
-## What v0.1 does
+## What it does
 
-- Streams CSV and JSON Lines; reads Parquet locally with Apache Arrow's Rust reader.
-- Profiles up to 100,000 rows with bounded distinct counters and displays a 100-row preview.
-- Handles ordinary JSON arrays up to 256 MB and gives a clear JSON Lines migration message for larger files.
-- Applies named transformations to the full source during export.
-- Stores no source data in a cloud service and includes no telemetry.
-- Saves versioned, readable recipe JSON with a source fingerprint.
+- Opens local CSV, JSON, JSON Lines, and Parquet files.
+- Profiles columns and provides named filters, derived columns, renames, selections, and local joins.
+- Saves readable `.ldw.json` recipes with source fingerprints.
+- Exports the complete native source; the browser fallback labels its 100-row limit before export.
 
-The free desk includes inspection, transformations, CSV export, recipe reopening, and three saved recipes. A $29 one-time license unlocks unlimited saved recipes, local joins, and JSON Lines export through the Sociobot billing API. Accessibility and CSV export are never gated.
+The free desk includes inspection, transformations, CSV export, recipe reopening, and three saved recipes. A $29 one-time license unlocks unlimited saved recipes, local joins, and JSON Lines export through the Sociobot billing API.
 
 ## Develop
 
@@ -26,7 +24,7 @@ npm run dev:site     # landing site on :5173
 npm run tauri dev    # native desktop app
 ```
 
-Browser development mode supports bounded CSV/JSON preview. Parquet, full-file export, native file dialogs, joins, and recipe reopening use the Rust desktop core.
+Browser development mode supports a bounded CSV/JSON preview. Parquet, complete-file export, native file dialogs, joins, and recipe reopening use the Rust desktop core.
 
 ## Test and build
 
@@ -36,9 +34,10 @@ npm run test:e2e     # Chromium desktop and 390px accessibility flows
 npm run build        # dist/app and dist/site
 npm run build:site   # exact static deploy output: dist/site
 npm run tauri build  # current-platform desktop bundle
+npm run test:bundle-notices # builds a Debian bundle and checks its notices
 ```
 
-The static factory deploy publishes `dist/site` (with `index.html` at that root). GitHub Actions builds unsigned `.dmg`, `.msi`/`.exe`, `.AppImage`, `.deb`, and `.rpm` assets on tagged releases.
+The static factory deploy publishes `dist/site` (with `index.html` at that root). GitHub Actions builds unsigned preview `.dmg`, `.msi`/`.exe`, `.AppImage`, `.deb`, and `.rpm` assets on tagged releases. Release workflow builds receive the immutable Git commit as `VITE_BUILD_ID`; the app and site footer display it.
 
 ## Install
 
@@ -52,7 +51,7 @@ curl -fsSL https://local-data-workbench.sociobot.in/install.sh | sh
 irm https://local-data-workbench.sociobot.in/install.ps1 | iex
 ```
 
-Both installers verify SHA-256 before opening or installing the downloaded artifact. Preview binaries are unsigned; macOS users must right-click → Open, and Windows may show SmartScreen.
+Both installers verify SHA-256 before opening or installing the downloaded artifact. The manifest is delivered over HTTPS and is not cryptographically signed. Preview binaries are unsigned; macOS users must right-click → Open, and Windows may show SmartScreen.
 
 ## Recipe format
 
@@ -60,6 +59,6 @@ Recipes declare `local-data-workbench/recipe@1`, source path/name/format/fingerp
 
 ## Privacy and licenses
 
-File contents, names, profiles, recipes, and outputs remain local. Paid-license verification sends only the license token to `api.sociobot.in` at most once per day. See the shipped [privacy notice](site/privacy/index.html), [terms](site/terms/index.html), MIT [license](LICENSE), and [third-party notices](THIRD_PARTY_NOTICES.md).
+The demo request log, offline reload, complete native export, and package-notice checks are listed in [.factory/claims.json](.factory/claims.json). See the shipped [privacy notice](site/privacy/index.html), [terms](site/terms/index.html), MIT [license](LICENSE), and [third-party notices](THIRD_PARTY_NOTICES.md). Desktop bundles include the application license, Apache 2.0 license, and third-party notice file.
 
 The visual system and generated-asset provenance are documented in [.factory/design.md](.factory/design.md).

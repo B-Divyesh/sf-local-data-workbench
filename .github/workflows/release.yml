@@ -11,6 +11,7 @@ permissions:
 env:
   RELEASE_TAG: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v0.1.0' }}
   APPIMAGE_EXTRACT_AND_RUN: '1'
+  VITE_BUILD_ID: ${{ github.sha }}
 
 jobs:
   build:
@@ -70,7 +71,9 @@ jobs:
           tag_name: ${{ env.RELEASE_TAG }}
           name: Local Data Workbench ${{ env.RELEASE_TAG }}
           body: |
-            First public preview. All processing is local. Builds are unsigned; see the download page for platform-specific opening instructions.
+            Build commit: ${{ github.sha }}
+
+            Preview builds are unsigned. Verify SHA-256 before opening an installer.
           files: ${{ matrix.files }}
           fail_on_unmatched_files: false
 

@@ -1,0 +1,6 @@
+order_id,region,status,amount
+1001,North,shipped,124.50
+1002,West,pending,88.00
+1003,North,shipped,241.25
+1004,South,cancelled,61.00
+1005,West,shipped,199.99

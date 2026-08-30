@@ -2,11 +2,26 @@ pub mod engine;
 
 #[cfg(feature = "desktop")]
 use engine::{DatasetSummary, ExportRequest, ExportResult, RecipeStep, TableData};
+#[cfg(feature = "desktop")]
+use tauri::Manager;
 
 #[cfg(feature = "desktop")]
 #[tauri::command]
 async fn analyze_file(path: String) -> Result<DatasetSummary, String> {
     tauri::async_runtime::spawn_blocking(move || engine::analyze_file(&path))
+        .await
+        .map_err(|error| format!("Local worker stopped: {error}"))?
+}
+
+#[cfg(feature = "desktop")]
+#[tauri::command]
+async fn sample_dataset(app: tauri::AppHandle) -> Result<DatasetSummary, String> {
+    let sample = app
+        .path()
+        .resource_dir()
+        .map_err(|error| format!("Could not locate bundled sample: {error}"))?
+        .join("samples/monthly-orders.csv");
+    tauri::async_runtime::spawn_blocking(move || engine::analyze_file(&sample.to_string_lossy()))
         .await
         .map_err(|error| format!("Local worker stopped: {error}"))?
 }
@@ -47,6 +62,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             analyze_file,
+            sample_dataset,
             preview_recipe,
             export_result,
             read_text_file,

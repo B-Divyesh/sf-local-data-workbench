@@ -1,6 +1,7 @@
 import './site.css';
 
 const RELEASE_API = 'https://api.github.com/repos/B-Divyesh/sf-local-data-workbench/releases/latest';
+const BUILD_ID = import.meta.env.VITE_BUILD_ID ?? 'source checkout';
 
 interface PlatformAsset { url: string; sha256?: string; name?: string }
 interface Manifest { version: string; platforms: Record<string, PlatformAsset> }
@@ -50,6 +51,11 @@ async function loadRelease(): Promise<void> {
   const detail = document.querySelector('#download-detail');
   const releaseState = document.querySelector('#release-state');
   const platform = await detectPlatform();
+  if (!navigator.onLine) {
+    if (detail) detail.textContent = 'You are offline. Open the releases page when you reconnect.';
+    if (releaseState) releaseState.textContent = 'Latest release details are unavailable while offline.';
+    return;
+  }
   try {
     const response = await fetch(RELEASE_API, {
       cache: 'no-cache',
@@ -75,8 +81,9 @@ async function loadRelease(): Promise<void> {
   }
 }
 
+document.querySelectorAll<HTMLElement>('[data-build-id]').forEach((element) => { element.textContent = BUILD_ID; });
 void loadRelease();
 
-if ('serviceWorker' in navigator && location.protocol === 'https:') {
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === '127.0.0.1' || location.hostname === 'localhost')) {
   window.addEventListener('load', () => void navigator.serviceWorker.register('/sw.js'));
 }

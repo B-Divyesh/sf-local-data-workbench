@@ -1,70 +1,51 @@
-# Local Data Workbench v0.1.0 — handoff
+# Local Data Workbench v0.1.1 — repair handoff
 
-## Independent verification status — FAIL (2026-08-30)
+## Release status
 
-Candidate `7bf2102ab66094a88a090496753198f8cfd191d8` at <https://local-data-workbench.sociobot.in> is **not accepted for release**. See [verification.md](verification.md) for full evidence.
+Repair candidate is buildable and ready to publish from this commit. It repairs every verifier finding from `f42737df23030a172421689ee19ba8e9a6dac9e9` against candidate `7bf2102ab66094a88a090496753198f8cfd191d8`.
 
-Release blockers:
+## What changed
 
-- `.factory/claims.json` and all required `@claim:` tests are missing.
-- There is no one-click sample-data demo, sample project, demo sandbox, or desktop walkthrough; `/demo` is only the landing page.
-- The cold first screen does not name the intended analysts/engineers and uses a privacy slogan as its headline.
-- Distributed macOS/Windows builds are unsigned despite the signed-desktop-app brief.
-- Published Linux packages do not contain the native/application license notices that the page says ship with the app.
-
-Additional defects include a browser-preview full-export contradiction, sub-44 px targets and an invisible keyboard tab stop, missing CSP/404/social metadata/copy audit, and release artifacts not tied to the candidate commit. Static deployment files do match the candidate byte-for-byte. Existing automated tests, production web/native builds, checksum verification, ordinary-load privacy checks, axe serious/critical checks, and performance budgets otherwise passed.
-
-## What was built
-
-- Tauri 2 desktop application with a Rust local-processing core and a Vite/TypeScript interface.
-- Local CSV, JSON, JSON Lines/NDJSON, and Parquet inspection with a 100-row preview, bounded 100,000-row profile counters, inferred types, nulls, distinct counts, ranges, row counts, and source fingerprints.
-- Named, ordered recipe steps for filters, derived text columns, renames, column selection, and keyed local joins. Steps can be reordered or removed by keyboard-accessible controls.
-- Portable `local-data-workbench/recipe@1` JSON save/reopen flow, source relocation prompt, and fingerprint-change warning.
-- Atomic full-file CSV and JSON Lines exports. Partial output is removed after failure and the chosen destination is replaced only after success.
-- $29 one-time Sociobot license flow: hosted buy link, return-token capture, paste-to-restore, daily verification cache, optimistic offline unlock, and quiet invalid/revoked handling. Core CSV inspection/transforms/export and three recipe saves remain free.
-- Responsive monochrome broadsheet visual system, original generated hero art, custom app icon, designed empty/loading/error/offline states, keyboard shortcuts, focus states, and reduced-motion behavior.
-- OS-aware static landing site, privacy and terms pages, service-worker shell cache, checksum-verifying shell/PowerShell installers, third-party notices, and GitHub Actions matrix for macOS arm64/x64, Windows, and Linux.
+- Added `.factory/claims.json` with observable, executable coverage for the demo, demo privacy, offline reload, complete native export, and packaged license notices.
+- Added `/demo/`: an isolated five-order monthly-orders sandbox with a persistent banner, reset, start-for-real link, filter, and CSV export. `.factory/demo.md` documents the namespace and reset behavior.
+- Added **Load sample project** to the desktop first-run screen. The bundled sample is separate from real source data and has a persistent demo banner.
+- Rewrote the first screen around the job and intended users: analysts and engineers inspect local data files and can try the sample first.
+- Reproduced the exact 101-row browser preview failure. Browser UI now says its bounded preview export is limited; the Rust regression proves native export includes rows 100 and 101.
+- Added 44 px navigation/license controls, removed the invisible file-input tab stop, and made the horizontally scrolling demo table keyboard-focusable.
+- Added CSP response headers, social/canonical metadata, apple touch icon, sitemap demo entry, a styled 404 response, consistent footer identity/build ID, and `.factory/copy-audit.md`.
+- Removed the false “signed manifest” wording. Preview packages are plainly marked unsigned until signing certificates are available.
+- Bundled `LICENSE`, `THIRD_PARTY_NOTICES.md`, `LICENSES/Apache-2.0.txt`, and the sample resource into desktop installers. The Debian package check observed all four paths.
+- Added immutable `VITE_BUILD_ID` workflow provenance. Release notes record the Git commit and app/site builds display that ID.
 
 ## Run and verify
 
 ```sh
 npm ci
 npm test
+npx tsc --noEmit
+cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
+cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets --all-features -- -D warnings
 npm run test:e2e
 npm run build
-npm run tauri build -- --bundles appimage,deb
+CI=true npm run test:bundle-notices
 ```
 
-Static deployment root: `dist/site` (contains `index.html`). Desktop web assets: `dist/app`.
+Verified in this repair container on 2026-08-30:
 
-Verified locally on 2026-08-28:
+- `npm ci`: passed, 0 audit vulnerabilities.
+- `npm test`: 3 Vitest + 4 Rust tests passed.
+- `npx tsc --noEmit`, Rust fmt, and full-feature clippy: passed.
+- `npm run test:e2e`: 10/10 desktop Chromium and 390 px tests passed, including Playwright Axe serious/critical checks, keyboard control sizing, demo export, request privacy, offline reload, and the exact preview-export regression.
+- `npm run build`: passed; `dist/app` and `dist/site` include the demo and `404.html`. Initial app JS is 8.14 KB gzip; site JS is 1.21 KB gzip.
+- `CI=true npm run test:bundle-notices`: passed. Debian package `Local Data Workbench_0.1.1_amd64.deb` contains the application MIT license, third-party notice, Apache notice, and bundled sample.
+- `/opt/fleet/lib/verify-url.sh http://127.0.0.1:4173/ <evidence-dir>`: passed, 735 ms local load, zero page/console errors, title/lang/one h1/main/alt/button checks all passed.
 
-- `npm test`: 3 TypeScript tests and 3 Rust engine tests passed.
-- `npm run test:e2e`: 4/4 Playwright flows passed (desktop Chromium and 390 px mobile); zero serious/critical axe violations.
-- `npm run build`: passed. Site JS 2.48 KB / CSS 8.42 KB; app JS 21.50 KB / CSS 10.87 KB, all uncompressed.
-- `cargo check`: passed with the full Tauri feature set.
-- Native Linux release build: passed; AppImage 76 MB and Debian package 5.1 MB.
-- Lighthouse mobile against the production build: Performance 100, Accessibility 100, Best Practices 100, SEO 100; LCP 1.1 s, total blocking time 0 ms, CLS 0.
-- `npm audit --audit-level=high`: 0 vulnerabilities.
-- Hero variants: 16 KB mobile, 38 KB medium, 112 KB desktop WebP.
+The standalone `@axe-core/cli` could not start because its Selenium Chrome binary is absent in this image. The pinned Playwright Axe integration ran against desktop and 390 px pages instead and passed.
 
-## Release packaging
+## Deployment and release
 
-`.github/workflows/release.yml` runs on `v*` tags and manual dispatch. It uses Tauri's action to build four jobs (macOS arm64, macOS x64, Windows x64, Linux x64), attaches artifacts with `softprops/action-gh-release`, then publishes `SHA256SUMS` and a valid `latest.json`. The site and one-line installers consume that manifest.
-
-Release `v0.1.0` is live at <https://github.com/B-Divyesh/sf-local-data-workbench/releases/tag/v0.1.0>. The successful release run produced `.dmg` packages for Apple silicon and Intel, `.msi` and `.exe` packages for Windows, and `.AppImage`, `.deb`, and `.rpm` packages for Linux. `latest.json` contains live per-platform URLs and hashes. A clean download of `Local.Data.Workbench_0.1.0_amd64.deb` passed verification against the published `SHA256SUMS` (`OK`).
-
-GitHub's `releases/latest/download/latest.json` response does not include browser CORS headers. The shell and PowerShell installers consume that canonical manifest directly; the static landing page uses GitHub's CORS-enabled latest-release API to resolve the same live assets and exposes the published `latest.json` and `SHA256SUMS` alongside them. No proxy or third-party runtime service is used.
-
-## Known boundaries
-
-- Standard JSON arrays are capped at 256 MB because serde must materialize the root array; JSON Lines is the supported streaming form for larger JSON data.
-- Join reference files are CSV/JSON/JSONL and capped at 200,000 rows. Parquet is supported as a primary source but not yet as the right-hand join source.
-- Profiling samples at most 100,000 rows; counts are explicitly marked estimated when sampled or capped.
-- The desktop release has no auto-updater and therefore ships no updater manifest.
+Deploy `dist/site` using the static work-order configuration after this commit is pushed. Tag the accepted commit `v0.1.1`; `.github/workflows/release.yml` builds macOS, Windows, and Linux artifacts, attaches checksums and `latest.json`, and embeds the tagged commit ID as the build identity.
 
 ## Needs operator action
 
-- The v0.1.0 workflow publishes unsigned preview builds. For production signing/notarization, configure `APPLE_CERTIFICATE`, `APPLE_CERTIFICATE_PASSWORD`, `APPLE_SIGNING_IDENTITY`, `APPLE_ID`, `APPLE_PASSWORD`, and `APPLE_TEAM_ID`; for Windows Authenticode configure `WINDOWS_CERT_PFX` and `WINDOWS_CERT_PASSWORD`, then add the corresponding import/sign steps to the workflow.
-- Register the production paid product for slug `local-data-workbench` in the Sociobot billing engine and set its return URL before announcing sales. No opaque product ID is hardcoded.
-- Submit later package metadata to Homebrew/winget only if those channels are desired; the release already provides direct installers and verified one-line installation.
+The researched brief calls for signed desktop releases. This repair removes any contradictory signed-package claim, but cannot create certificates. Before a signed production release, provide `APPLE_CERTIFICATE`, `APPLE_CERTIFICATE_PASSWORD`, `APPLE_SIGNING_IDENTITY`, `APPLE_ID`, `APPLE_PASSWORD`, `APPLE_TEAM_ID`, `WINDOWS_CERT_PFX`, and `WINDOWS_CERT_PASSWORD`, then enable signing/notarization in the release workflow. Until then, published builds remain explicitly unsigned previews.

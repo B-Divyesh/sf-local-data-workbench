@@ -1,5 +1,5 @@
-const CACHE = 'local-data-workbench-site-v1';
-const SHELL = ['/', '/privacy/', '/terms/', '/assets/hero-ledger-640.webp', '/assets/hero-ledger-960.webp'];
+const CACHE = 'local-data-workbench-site-v2';
+const SHELL = ['/', '/demo/', '/privacy/', '/terms/', '/404.html', '/assets/hero-ledger-640.webp', '/assets/hero-ledger-960.webp'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL)));

@@ -1,0 +1,44 @@
+[
+  {
+    "id": "sample-demo",
+    "claim": "Try the product with sample data in one click",
+    "where": "landing page and desktop first-run screen",
+    "test": "npm run test:e2e -- --grep @claim:sample-demo",
+    "sandbox": "fresh browser context; open the landing page and assert the visible demo link"
+  },
+  {
+    "id": "sample-export",
+    "claim": "The demo filters and exports its sample CSV",
+    "where": "demo page walkthrough",
+    "test": "npm run test:e2e -- --grep @claim:sample-export",
+    "sandbox": "fresh browser context; filter shipped sample orders and inspect the CSV download"
+  },
+  {
+    "id": "local-only-demo",
+    "claim": "The demo does not send sample data to another origin",
+    "where": "landing facts and demo banner",
+    "test": "npm run test:e2e -- --grep @claim:local-only-demo",
+    "sandbox": "record every request during a complete demo filter flow; assert same-origin only"
+  },
+  {
+    "id": "offline-reload",
+    "claim": "The landing page reloads offline after its first visit",
+    "where": "service worker behavior",
+    "test": "npm run test:e2e -- --grep @claim:offline-reload",
+    "sandbox": "new browser context; visit once, await service worker, set offline, then reload"
+  },
+  {
+    "id": "desktop-complete-export",
+    "claim": "The desktop app exports matching rows beyond its 100-row preview",
+    "where": "desktop preview and README",
+    "test": "cargo test --manifest-path src-tauri/Cargo.toml --no-default-features claim_desktop_complete_export",
+    "sandbox": "101-row CSV; filter amount greater than 99; assert rows 100 and 101 are written"
+  },
+  {
+    "id": "bundled-license-notices",
+    "claim": "Desktop installers include application and native license notices",
+    "where": "landing FAQ and README",
+    "test": "CI=true npm run test:bundle-notices",
+    "sandbox": "build a Debian installer and assert LICENSE, THIRD_PARTY_NOTICES.md, and Apache-2.0.txt are packaged"
+  }
+]

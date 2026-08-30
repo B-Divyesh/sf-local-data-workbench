@@ -23,12 +23,23 @@ const stepDialog = $<HTMLDialogElement>('#step-dialog');
 const licenseDialog = $<HTMLDialogElement>('#license-dialog');
 const browserFile = $<HTMLInputElement>('#browser-file');
 const exportFormat = $<HTMLSelectElement>('#export-format');
+const BUILD_ID = import.meta.env.VITE_BUILD_ID ?? 'source checkout';
+
+const sampleData: TableData = {
+  headers: ['order_id', 'region', 'status', 'amount'],
+  rows: [
+    ['1001', 'North', 'shipped', '124.50'], ['1002', 'West', 'pending', '88.00'],
+    ['1003', 'North', 'shipped', '241.25'], ['1004', 'South', 'cancelled', '61.00'],
+    ['1005', 'West', 'shipped', '199.99']
+  ]
+};
 
 let dataset: DatasetSummary | null = null;
 let steps: RecipeStep[] = [];
 let transformed: TableData | null = null;
 let unlocked = false;
 let joinPath = '';
+let demoMode = false;
 
 function setStatus(message: string): void { $('#status').textContent = message; }
 function showOnly(state: 'empty' | 'loading' | 'error' | 'table'): void {
@@ -103,7 +114,11 @@ function renderTable(data: TableData): void {
   table.innerHTML = head + body;
   $('#sample-badge').textContent = `${data.rows.length.toLocaleString()} preview rows`;
   $('#preview-title').textContent = steps.length ? `${dataset?.name ?? 'Result'} · ${steps.length} step${steps.length === 1 ? '' : 's'}` : dataset?.name ?? 'Preview';
-  $('#preview-note').textContent = dataset?.preview_limited ? `Showing a bounded preview of ${dataset.row_count.toLocaleString()} source rows. Export applies this recipe to the complete file.` : `Showing all ${data.rows.length.toLocaleString()} rows in this source.`;
+  $('#preview-note').textContent = dataset?.preview_limited
+    ? isTauri()
+      ? `Showing a bounded preview of ${dataset.row_count.toLocaleString()} source rows. Export applies this recipe to the complete file.`
+      : `Showing 100 preview rows from ${dataset.row_count.toLocaleString()} source rows. Browser export includes only these preview rows; install the app for complete-file export.`
+    : `Showing all ${data.rows.length.toLocaleString()} rows in this source.`;
   showOnly('table');
 }
 
@@ -143,6 +158,8 @@ async function acceptDataset(summary: DatasetSummary): Promise<void> {
 }
 
 async function openSource(): Promise<void> {
+  demoMode = false;
+  $<HTMLElement>('#demo-banner').hidden = true;
   if (!isTauri()) { browserFile.click(); return; }
   const selected = await open({ multiple: false, filters: [{ name: 'Data files', extensions: ['csv', 'json', 'jsonl', 'ndjson', 'parquet'] }] });
   if (!selected) return;
@@ -150,6 +167,19 @@ async function openSource(): Promise<void> {
   setStatus('Reading and profiling the source locally…');
   try { await acceptDataset(await invoke<DatasetSummary>('analyze_file', { path: selected })); }
   catch (error) { displayError('The source could not be opened.', `${String(error)} Choose a valid CSV, JSON, JSONL, or Parquet file.`); }
+}
+
+async function loadSample(): Promise<void> {
+  demoMode = true;
+  $<HTMLElement>('#demo-banner').hidden = false;
+  showOnly('loading');
+  if (isTauri()) {
+    try { await acceptDataset(await invoke<DatasetSummary>('sample_dataset')); setStatus('Loaded the bundled sample project.'); return; }
+    catch (error) { displayError('The sample project could not be loaded.', `${String(error)} Choose a source file instead.`); return; }
+  }
+  const profiles = inferProfiles(sampleData);
+  await acceptDataset({ path: 'demo:monthly-orders.csv', name: 'monthly-orders.csv', format: 'csv', size_bytes: 185, row_count: sampleData.rows.length, scanned_rows: sampleData.rows.length, headers: sampleData.headers, rows: sampleData.rows, profiles, fingerprint: 'demo:monthly-orders:v1', preview_limited: false });
+  setStatus('Loaded the isolated sample project. Nothing was saved to your files.');
 }
 
 function parseCsv(text: string): TableData {
@@ -246,7 +276,8 @@ function currentRecipe(name?: string): Recipe {
 
 async function saveRecipe(): Promise<void> {
   if (!dataset) return;
-  const savedCount = Number(localStorage.getItem('ldw:saved-recipes') ?? '0');
+  const savedRecipeKey = demoMode ? 'demo:ldw:saved-recipes' : 'ldw:saved-recipes';
+  const savedCount = Number(localStorage.getItem(savedRecipeKey) ?? '0');
   if (!unlocked && savedCount >= 3) { $('#license-notice').textContent = 'The free desk includes three saved recipes. A one-time license removes the limit.'; licenseDialog.showModal(); return; }
   const contents = `${JSON.stringify(currentRecipe(), null, 2)}\n`;
   if (isTauri()) {
@@ -258,7 +289,7 @@ async function saveRecipe(): Promise<void> {
     const anchor = document.createElement('a'); anchor.href = URL.createObjectURL(new Blob([contents], { type: 'application/json' })); anchor.download = `${dataset.name}.ldw.json`; anchor.click(); URL.revokeObjectURL(anchor.href);
     setStatus('Saved portable recipe.');
   }
-  localStorage.setItem('ldw:saved-recipes', String(savedCount + 1));
+  localStorage.setItem(savedRecipeKey, String(savedCount + 1));
 }
 
 async function openRecipe(): Promise<void> {
@@ -310,6 +341,9 @@ async function submitLicense(): Promise<void> {
 
 function bindEvents(): void {
   ['#open-file', '#empty-open', '#error-open'].forEach((selector) => $(selector).addEventListener('click', openSource));
+  $('#load-sample').addEventListener('click', () => void loadSample());
+  $('#reset-demo').addEventListener('click', () => void loadSample());
+  $('#start-real').addEventListener('click', () => { location.href = location.pathname; });
   browserFile.addEventListener('change', () => { const file = browserFile.files?.[0]; if (file) void handleBrowserFile(file); });
   $('#add-step').addEventListener('click', () => { joinPath = ''; renderStepFields(); stepDialog.showModal(); });
   $('#step-kind').addEventListener('change', renderStepFields);
@@ -332,10 +366,13 @@ function bindEvents(): void {
 }
 
 async function start(): Promise<void> {
-  captureReturnedLicense();
-  unlocked = optimisticUnlock();
+  $('#build-id').textContent = BUILD_ID;
+  const directDemo = location.search.includes('demo=1');
+  if (!directDemo) captureReturnedLicense();
+  unlocked = directDemo ? false : optimisticUnlock();
   updateLicenseUI(); updateConnectivity(); renderSource(); renderRecipe(); bindEvents(); showOnly('empty');
-  if (getLicenseToken()) {
+  if (directDemo) await loadSample();
+  if (!directDemo && getLicenseToken()) {
     const verdict = await verifyLicense(); unlocked = verdict.valid; updateLicenseUI(verdict.reason);
   }
 }

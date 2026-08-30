@@ -15,7 +15,7 @@ esac
 
 curl -fsSL "$RELEASE_ROOT/latest.json" -o "$WORK_DIR/latest.json"
 if ! command -v python3 >/dev/null 2>&1; then
-  echo "python3 is required to safely read the signed release manifest." >&2
+  echo "python3 is required to read the HTTPS release manifest." >&2
   exit 1
 fi
 

@@ -1,8 +1,4 @@
 {
-  "navigationFallback": {
-    "rewrite": "/index.html",
-    "exclude": ["/assets/*", "/privacy/*", "/terms/*", "/*.sh", "/*.ps1", "/*.xml", "/*.txt"]
-  },
   "routes": [
     {
       "route": "/assets/*",
@@ -24,6 +20,10 @@
   "globalHeaders": {
     "X-Content-Type-Options": "nosniff",
     "Referrer-Policy": "strict-origin-when-cross-origin",
-    "Permissions-Policy": "camera=(), microphone=(), geolocation=()"
+    "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+    "Content-Security-Policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://api.github.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
+  },
+  "responseOverrides": {
+    "404": { "rewrite": "/404.html" }
   }
 }
