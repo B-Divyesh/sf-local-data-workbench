@@ -485,6 +485,11 @@
       "degree": 14
     },
     {
+      "id": "src_app_bindevents",
+      "label": "bindEvents()",
+      "degree": 13
+    },
+    {
       "id": "src_tauri_src_engine_analyze_file",
       "label": "analyze_file()",
       "degree": 13
@@ -495,29 +500,14 @@
       "degree": 13
     },
     {
-      "id": "src_app_bindevents",
-      "label": "bindEvents()",
-      "degree": 13
-    },
-    {
-      "id": "src_tauri_src_engine_source_headers",
-      "label": "source_headers()",
-      "degree": 12
-    },
-    {
       "id": "src_tauri_src_engine_preview_recipe",
       "label": "preview_recipe()",
       "degree": 12
     },
     {
-      "id": "src_tauri_src_engine_json_headers",
-      "label": "json_headers()",
-      "degree": 11
-    },
-    {
-      "id": "src_tauri_src_engine_compile_steps",
-      "label": "compile_steps()",
-      "degree": 11
+      "id": "src_tauri_src_engine_source_headers",
+      "label": "source_headers()",
+      "degree": 12
     },
     {
       "id": "src_app_openrecipe",
@@ -528,45 +518,44 @@
       "id": "src_app_start",
       "label": "start()",
       "degree": 11
+    },
+    {
+      "id": "src_tauri_src_engine_compile_steps",
+      "label": "compile_steps()",
+      "degree": 11
+    },
+    {
+      "id": "src_tauri_src_engine_json_headers",
+      "label": "json_headers()",
+      "degree": 11
     }
   ],
   "surprises": [
     {
-      "source": "required",
-      "target": "identifier",
-      "source_files": [
-        "src-tauri/gen/schemas/desktop-schema.json",
-        "src-tauri/gen/schemas/linux-schema.json"
-      ],
-      "confidence": "EXTRACTED",
-      "relation": "extends",
-      "why": "cross-file semantic connection"
-    },
-    {
-      "source": "required",
-      "target": "permissions",
-      "source_files": [
-        "src-tauri/gen/schemas/desktop-schema.json",
-        "src-tauri/gen/schemas/linux-schema.json"
-      ],
-      "confidence": "EXTRACTED",
-      "relation": "extends",
-      "why": "cross-file semantic connection"
-    },
-    {
-      "source": "renderSource()",
-      "target": "humanBytes()",
+      "source": "addStep()",
+      "target": "validateRecipeSteps()",
       "source_files": [
         "src/app.ts",
-        "src/types.ts"
+        "src/recipe.ts"
       ],
       "confidence": "EXTRACTED",
       "relation": "calls",
       "why": "cross-file semantic connection"
     },
     {
-      "source": "renderRecipe()",
-      "target": "recipeStepDescription()",
+      "source": "bindEvents()",
+      "target": "getLicenseToken()",
+      "source_files": [
+        "src/app.ts",
+        "src/license.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "cross-file semantic connection"
+    },
+    {
+      "source": "exportData()",
+      "target": "humanBytes()",
       "source_files": [
         "src/app.ts",
         "src/types.ts"
@@ -578,6 +567,17 @@
     {
       "source": "refreshPreview()",
       "target": "applyPreview()",
+      "source_files": [
+        "src/app.ts",
+        "src/recipe.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "cross-file semantic connection"
+    },
+    {
+      "source": "refreshPreview()",
+      "target": "validateRecipeSteps()",
       "source_files": [
         "src/app.ts",
         "src/recipe.ts"
