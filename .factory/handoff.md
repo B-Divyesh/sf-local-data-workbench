@@ -1,97 +1,97 @@
 # Repair handoff — Local Data Workbench 0.1.9
 
-## What changed
+## Released repair
 
-This repair resolves the verifier's release-provenance failure. The release
-workflow now resolves the release tag to one immutable commit before any build
-starts, checks out that exact revision for Linux, macOS, and Windows, injects
-that commit into every application build, and verifies the tag again before
-uploading assets.
+The release-provenance failure in independent verification 4 is repaired and
+published.
 
-The landing page now enables installers only when GitHub release metadata has:
+- Repaired candidate: `d456abfd26315cc15e9c4bcb13c1638243d13557`
+- Git tag and release: `v0.1.9`
+- Release: <https://github.com/B-Divyesh/sf-local-data-workbench/releases/tag/v0.1.9>
+- Live site: <https://local-data-workbench.sociobot.in>
+- Static deployment: Azure Static Web Apps deployment
+  `df44261d-b73f-488d-9893-6219d8fc435e`
 
-- the exact `v0.1.9` version and the exact page build commit in `Source commit`;
-- a SHA-256 digest for every platform package, `latest.json`, and `SHA256SUMS`;
-- all Linux, macOS arm64/x64, and Windows package entries.
+The release workflow resolves the tag to one immutable commit before every
+platform build, checks out that commit in each build job, injects it as
+`VITE_BUILD_ID`, confirms the tag again before publishing, and builds
+`SHA256SUMS` plus `latest.json` from the upload filenames. The landing page
+only enables downloads when the GitHub release's source-commit line, version,
+checksums, and complete platform set match its own build ID. The regression
+test reproduces the former stale-release condition and asserts the page keeps
+all downloads disabled.
 
-If a release is stale, incomplete, or does not match the page revision, every
-installer link remains disabled. The regression test reproduces the former
-failure with a stale release commit.
+`v0.1.9` contains Linux RPM/AppImage/DEB, macOS arm64/x64 DMGs, and Windows
+MSI/EXE. Its release notes, `latest.json`, and deployed page all name the
+same source revision above. GitHub's asset digests match each of the seven
+`SHA256SUMS` entries, and every platform item in `latest.json` uses that same
+name and SHA-256. A downloaded Debian artifact was verified against the
+published manifest:
 
-macOS and Windows packages are now built on every release. When the operator
-has not supplied signing credentials they remain downloadable, explicitly say
-“unsigned,” and are never described as signed. The one-line installers verify
-SHA-256 and print the same unsigned warning before opening or running those
-packages. Paid access remains paused until signed macOS and Windows releases
-are available.
+```text
+Local.Data.Workbench_0.1.9_amd64.deb
+SHA-256 2384b85261c98755fa3d0e24e8f5f3ba9669b3842cfa236d4b9f349210c7fc5c
+```
 
-## Verification completed locally
+The published Debian package includes `LICENSE`, `THIRD_PARTY_NOTICES.md`,
+`LICENSES/Apache-2.0.txt`, and the bundled sample data.
 
-From a clean `npm ci` installation:
+## Signing status
+
+macOS and Windows packages are published as **unsigned**. Release metadata,
+release notes, download labels, and one-line installers all say this plainly;
+no signing claim is made. The product's paid-license path remains unavailable
+until signed macOS and Windows packages are verified.
+
+Signed/notarized macOS releases require `APPLE_CERTIFICATE`,
+`APPLE_CERTIFICATE_PASSWORD`, `APPLE_SIGNING_IDENTITY`, `APPLE_API_KEY`,
+`APPLE_API_KEY_ID`, and `APPLE_API_ISSUER`. Signed Windows releases require
+`WINDOWS_CERT_PFX` and `WINDOWS_CERT_PASSWORD` (and may use
+`WINDOWS_TIMESTAMP_URL`). Those operator credentials were not read, created,
+or assumed.
+
+## Verification evidence
+
+All checks below ran after a clean `npm ci`:
 
 ```sh
 npm test
 npx --no-install tsc --noEmit
 cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
-cargo clippy --manifest-path src-tauri/Cargo.toml --all-features -- -D warnings
+cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets --all-features -- -D warnings
 cargo test --manifest-path src-tauri/Cargo.toml --all-features
 npm run build
 npm run test:e2e
 CI=true npm run test:bundle-notices
 ```
 
-All commands passed. The browser suite ran 36 checks across desktop Chromium
-and the 390 px project. It includes the stale-release regression, offline
-reload, keyboard focus, direct Playwright Axe checks, demo isolation, local
-request privacy, and package-signing disclosure. The optimized Debian bundle
-was built and checked for `LICENSE`, `THIRD_PARTY_NOTICES.md`, and
-`LICENSES/Apache-2.0.txt`.
+They passed. The browser suite ran 36 checks at desktop and 390 px, including
+the two-viewport stale-provenance regression, keyboard focus, direct
+Playwright Axe scans, demo isolation, privacy request recording, offline
+reload, and unsigned-package disclosure. The Debian consumer-package check
+rebuilt the installer and checked the three required license files.
 
-`/opt/fleet/lib/verify-url.sh` passed against the production static build on a
-local preview: HTTP 200, title, `lang=en`, one H1, main landmark, image alt
-text, labelled buttons, and no page or console errors. The standalone Axe CLI
-could not start because its system ChromeDriver supports Chrome 152 while the
-provided Playwright Chromium is 145; the equivalent in-suite Axe scans passed
-at both required viewports.
+`/opt/fleet/lib/verify-url.sh` passed both against the local production
+preview and the public URL. The live result was title
+`Local Data Workbench — Inspect local data files`, `lang=en`, one H1, a main
+landmark, no missing image alt text, no unlabeled buttons, and no page or
+console errors. Direct public Playwright checks at 1366 px and 390 px opened
+the isolated demo, found the active `v0.1.9` AppImage link, and reported zero
+serious/critical Axe findings. A fresh live browser context also reloaded the
+landing page offline with the correct H1 and zero console errors.
 
-`actionlint` accepted `.github/workflows/release.yml`. The static build is
-within budget: application JavaScript is 7.51 kB gzip, landing JavaScript is
-1.91 kB gzip, and landing CSS is 3.31 kB gzip.
+The public `index.html` SHA-256 is
+`3cc735ad96d1049fa6dafc4633413f1530e27fff2153c0f880ce9adae2ffc2f8` both
+locally and after deployment. Its main application bundle SHA-256 is
+`b4c1c4096e713caf1ea912ef7d466d6473f3ab13b62f50f629f859ed76c446c8` in
+both places, and it contains build ID `d456abf…`. The live CSP limits scripts,
+styles, and assets to same-origin and permits only GitHub's API for release
+metadata.
 
-## Release and deployment procedure
+## Known gap / next operator action
 
-`v0.1.7` is retained as an unsuccessful audit tag: its macOS jobs exposed that
-empty Apple signing variables still trigger Tauri's certificate import.
-`v0.1.8` is retained as a metadata audit tag: GitHub normalized the macOS
-filenames from spaces to dots while its manifest still contained the old
-names. This candidate normalizes every downloaded release asset before it
-calculates `SHA256SUMS` or `latest.json`; a flat-artifact regression test
-reproduces that exact upload path. Tag `v0.1.9` at this handoff commit and
-push the commit and tag. The GitHub
-workflow builds the packages from the tagged commit, checks every published
-binary against `SHA256SUMS`, and writes the same commit to `latest.json` and
-release notes. Verify the release through the GitHub API: the `Source commit`
-line must equal the tag commit, every listed asset must have a GitHub
-`sha256:` digest, and downloading `SHA256SUMS` followed by
-`sha256sum -c SHA256SUMS` must succeed.
-
-Deploy `dist/site` only after that release succeeds. Its footer build ID must
-equal the source commit in the release notes; otherwise the page deliberately
-keeps download links disabled.
-
-## Operator action
-
-Signed macOS releases require `APPLE_CERTIFICATE`,
-`APPLE_CERTIFICATE_PASSWORD`, `APPLE_SIGNING_IDENTITY`, `APPLE_API_KEY`,
-`APPLE_API_KEY_ID`, and `APPLE_API_ISSUER`. Signed Windows releases require
-`WINDOWS_CERT_PFX` and `WINDOWS_CERT_PASSWORD` (plus optional
-`WINDOWS_TIMESTAMP_URL`). These credentials were not read or assumed by this
-repair. Without them, the workflow publishes honest unsigned macOS and Windows
-artifacts and the release metadata says so.
-
-## Known gap
-
-The original researched brief calls for signed desktop installers. The product
-can build and disclose unsigned macOS and Windows packages now, but the owner
-must add the listed certificates for a signed/notarized release. No signing
-claim is made until the workflow's platform verification step has passed.
+The researched brief asks for signed desktop installers. The release has
+honest unsigned macOS and Windows artifacts because the required operator
+certificates are unavailable. Add the listed signing secrets and publish a
+new tagged release to meet that stronger requirement; do not relabel this
+release as signed.
