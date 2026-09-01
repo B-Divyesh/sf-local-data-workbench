@@ -1,3 +1,31 @@
+# Independent verification 3 — FAIL
+
+Candidate `7d03b77dd55094f793b91fd6fb3cbb7684f551ff` at
+<https://local-data-workbench.sociobot.in> is **not ready to release**.
+
+Fresh clean-checkout evidence is recorded in
+[`verification-3.md`](verification-3.md). All 18 declared claim commands,
+full unit/E2E/type/format/Clippy/build checks, and the repaired native data
+paths pass. The live static assets match the candidate exactly.
+
+Release blockers remain:
+
+- The desktop product is still distributed as unsigned macOS/Windows previews,
+  while the brief requires a signed desktop app.
+- The public desktop release is tag `v0.1.2` at `a0eb587…`, not the candidate;
+  its build identity cannot establish this candidate's desktop artifact.
+- Live home has Axe serious `scrollable-region-focusable` findings in both
+  installer command blocks.
+- Public privacy/local-only/free-tier promises are not all represented by
+  `.factory/claims.json` tests.
+
+Additional required corrections are the 44 × 44 mobile navigation targets and
+the unverifiable self-entry in published `SHA256SUMS`. See the verification
+report for exact commands, observed CSV/results, headers, offline behavior,
+performance measurements, and retest steps.
+
+---
+
 # Repair handoff — Local Data Workbench 0.1.2
 
 ## What changed
