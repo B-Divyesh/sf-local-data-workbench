@@ -197,7 +197,9 @@ jobs:
         run: |
           set -eu
           case "$RELEASE_TAG" in v[0-9]*) ;; *) echo 'Release tag must start with v and a version number.' >&2; exit 2 ;; esac
-          git fetch --depth=1 origin "refs/tags/$RELEASE_TAG:refs/tags/$RELEASE_TAG"
+          if ! git rev-parse -q --verify "refs/tags/$RELEASE_TAG" >/dev/null; then
+            git fetch --depth=1 origin "refs/tags/$RELEASE_TAG:refs/tags/$RELEASE_TAG"
+          fi
           tag_commit="$(git rev-list -n 1 "refs/tags/$RELEASE_TAG")"
           test "$tag_commit" = "$GITHUB_SHA"
       - uses: actions/download-artifact@v4

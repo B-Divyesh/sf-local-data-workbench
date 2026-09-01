@@ -5,8 +5,8 @@ import { readFile } from 'node:fs/promises';
 const RELEASE_API = 'https://api.github.com/repos/B-Divyesh/sf-local-data-workbench/releases/latest';
 
 async function mockRelease(page: Page, body: object = {
-  tag_name: 'v0.1.3', target_commitish: 'candidate-commit', body: 'Build commit: candidate-commit\nmacOS signing: unavailable\nWindows signing: unavailable', assets: [
-    { name: 'Local_Data_Workbench_0.1.3_amd64.AppImage', browser_download_url: 'https://github.com/B-Divyesh/sf-local-data-workbench/releases/download/v0.1.3/Local_Data_Workbench_0.1.3_amd64.AppImage' }
+  tag_name: 'v0.1.4', target_commitish: 'candidate-commit', body: 'Build commit: candidate-commit\nmacOS signing: unavailable\nWindows signing: unavailable', assets: [
+    { name: 'Local_Data_Workbench_0.1.4_amd64.AppImage', browser_download_url: 'https://github.com/B-Divyesh/sf-local-data-workbench/releases/download/v0.1.4/Local_Data_Workbench_0.1.4_amd64.AppImage' }
   ]
 }): Promise<void> {
   await page.route(RELEASE_API, (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(body) }));
@@ -122,7 +122,7 @@ test('@claim:build-identity built pages identify their version and source revisi
   await expect(page.locator('[data-build-id]').last()).not.toContainText('source checkout');
   await page.goto('http://127.0.0.1:1420/');
   await expect(page.locator('#build-id')).not.toContainText('source checkout');
-  await expect(page.locator('#build-id')).toContainText('0.1.3');
+  await expect(page.locator('#build-id')).toContainText('0.1.4');
 });
 
 test('@claim:local-only-demo demo sends no third-party requests', async ({ page }) => {
@@ -233,10 +233,10 @@ test('@claim:paid-access-withheld no checkout or token verification is available
 
 test('@claim:signed-platform-gating unsigned release assets never enable macOS or Windows downloads', async ({ page }) => {
   await mockRelease(page, {
-    tag_name: 'v0.1.3', target_commitish: 'candidate-commit', body: 'Build commit: candidate-commit\nmacOS signing: unavailable\nWindows signing: unavailable', assets: [
-      { name: 'Local_Data_Workbench_0.1.3_x64.dmg', browser_download_url: 'https://example.invalid/unsigned.dmg' },
-      { name: 'Local_Data_Workbench_0.1.3_x64-setup.exe', browser_download_url: 'https://example.invalid/unsigned.exe' },
-      { name: 'Local_Data_Workbench_0.1.3_amd64.AppImage', browser_download_url: 'https://example.invalid/linux.AppImage' }
+    tag_name: 'v0.1.4', target_commitish: 'candidate-commit', body: 'Build commit: candidate-commit\nmacOS signing: unavailable\nWindows signing: unavailable', assets: [
+      { name: 'Local_Data_Workbench_0.1.4_x64.dmg', browser_download_url: 'https://example.invalid/unsigned.dmg' },
+      { name: 'Local_Data_Workbench_0.1.4_x64-setup.exe', browser_download_url: 'https://example.invalid/unsigned.exe' },
+      { name: 'Local_Data_Workbench_0.1.4_amd64.AppImage', browser_download_url: 'https://example.invalid/linux.AppImage' }
     ]
   });
   await page.goto('http://127.0.0.1:4173/');

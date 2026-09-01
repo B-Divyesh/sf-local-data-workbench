@@ -22,8 +22,8 @@ describe('installer verification', () => {
   it('@claim:release-manifest-integrity makes a complete SHA256SUMS check without a self-entry', async () => {
     const directory = await mkdtemp(join(tmpdir(), 'local-data-workbench-release-'));
     try {
-      await writeFile(join(directory, 'local-data-workbench_0.1.3_amd64.AppImage'), 'verified fixture\n');
-      execFileSync('sh', ['scripts/build-release-manifest.sh', directory, 'v0.1.3', 'candidate-commit', 'false', 'false'], { cwd: process.cwd(), stdio: 'pipe' });
+      await writeFile(join(directory, 'local-data-workbench_0.1.4_amd64.AppImage'), 'verified fixture\n');
+      execFileSync('sh', ['scripts/build-release-manifest.sh', directory, 'v0.1.4', 'candidate-commit', 'false', 'false'], { cwd: process.cwd(), stdio: 'pipe' });
       const sums = await readFile(join(directory, 'SHA256SUMS'), 'utf8');
       const latest = JSON.parse(await readFile(join(directory, 'latest.json'), 'utf8')) as { commit: string; signing: { macos: boolean; windows: boolean }; platforms: Record<string, unknown> };
       expect(sums).not.toMatch(/SHA256SUMS|latest\.json/);
