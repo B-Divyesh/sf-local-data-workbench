@@ -588,6 +588,11 @@
       "degree": 15
     },
     {
+      "id": "src_app_bindevents",
+      "label": "bindEvents()",
+      "degree": 12
+    },
+    {
       "id": "src_tauri_src_engine_preview_recipe",
       "label": "preview_recipe()",
       "degree": 12
@@ -603,23 +608,18 @@
       "degree": 12
     },
     {
-      "id": "src_app_bindevents",
-      "label": "bindEvents()",
-      "degree": 12
-    },
-    {
-      "id": "src_tauri_src_engine_compile_steps",
-      "label": "compile_steps()",
-      "degree": 11
-    },
-    {
-      "id": "src_tauri_src_engine_json_headers",
-      "label": "json_headers()",
+      "id": "src_app_openrecipe",
+      "label": "openRecipe()",
       "degree": 11
     },
     {
       "id": "src_app_setstatus",
       "label": "setStatus()",
+      "degree": 11
+    },
+    {
+      "id": "src_tauri_src_engine_compile_steps",
+      "label": "compile_steps()",
       "degree": 11
     }
   ],
