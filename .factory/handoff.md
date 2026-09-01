@@ -68,15 +68,29 @@ and SEO. Playwright runs the Axe check on desktop and 390 px views.
 
 ## Release and deployment
 
-The repaired commit is tagged `v0.1.6` and pushed before its GitHub Actions
-release is observed. The workflow must release from that exact tag/commit; its
-published `latest.json` exposes only the verified Linux asset until platform
-signing is available. After release completion, download `SHA256SUMS` and one
-Linux asset, then run `sha256sum -c SHA256SUMS` in the download directory.
+Candidate `v0.1.6` is commit
+`968d4a77b928a408464a3fcec4159a25303d0ebe`. GitHub Actions run
+`33556905445` completed successfully. Its release notes record that same
+commit and report `macOS signing: unavailable` and `Windows signing:
+unavailable`; it published only Linux RPM, AppImage, and DEB assets plus
+`SHA256SUMS` and `latest.json`.
 
-The static site deploy is built from `dist/site` using the existing Static Web
-Apps configuration. The live verification and release asset evidence are added
-below after the push/deploy completes.
+The published `latest.json` names candidate `v0.1.6`, the exact commit above,
+`signing.macos=false`, `signing.windows=false`, and only `platforms.linux`.
+The downloaded `Local.Data.Workbench_0.1.6_amd64.AppImage` passed the SHA-256
+from `latest.json`; `SHA256SUMS` contains no `SHA256SUMS` or `latest.json`
+self-entry.
+
+`dist/site`, built with that exact commit as `VITE_BUILD_ID`, was deployed to
+the scoped Static Web App production environment. Live
+`https://local-data-workbench.sociobot.in` verifies HTTP 200 with no browser
+console errors and reports `0.1.6 · 968d4a77…`. A fresh mobile browser context
+resolves its Linux button to the published v0.1.6 AppImage and keeps macOS and
+Windows links hidden.
+
+The old unsigned macOS/Windows `.dmg`, `.msi`, and `.exe` assets and their old
+invalid `SHA256SUMS`/`latest.json` files were removed from v0.1.0 through
+v0.1.2. Their Linux RPM/AppImage/DEB assets remain available.
 
 ## Needs operator action
 
