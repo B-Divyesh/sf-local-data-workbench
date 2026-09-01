@@ -19,6 +19,11 @@ if ! command -v python3 >/dev/null 2>&1; then
   exit 1
 fi
 
+if ! python3 -c 'import json,sys; manifest=json.load(open(sys.argv[1])); sys.exit(0 if sys.argv[2] in manifest.get("platforms", {}) else 1)' "$WORK_DIR/latest.json" "$PLATFORM"; then
+  echo "No verified installer is published for this platform. Nothing was downloaded or installed." >&2
+  exit 1
+fi
+
 URL="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["platforms"][sys.argv[2]]["url"])' "$WORK_DIR/latest.json" "$PLATFORM")"
 EXPECTED="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["platforms"][sys.argv[2]]["sha256"])' "$WORK_DIR/latest.json" "$PLATFORM")"
 NAME="$(basename "$URL")"
@@ -37,6 +42,6 @@ else
   DESTINATION="$HOME/Downloads/$NAME"
   cp "$WORK_DIR/$NAME" "$DESTINATION"
   echo "Downloaded and verified $DESTINATION"
-  echo "Open the disk image, then drag Local Data Workbench to Applications. The preview is unsigned: right-click the app and choose Open the first time."
+  echo "Open the disk image, then drag Local Data Workbench to Applications."
   open "$DESTINATION"
 fi

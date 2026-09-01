@@ -1,9 +1,7 @@
 import './styles.css';
 import { invoke } from '@tauri-apps/api/core';
 import { open, save } from '@tauri-apps/plugin-dialog';
-import { openUrl } from '@tauri-apps/plugin-opener';
 import { applyPreview, validateRecipeSteps, type TableData } from './recipe';
-import { captureReturnedLicense, getLicenseToken, optimisticUnlock, storeLicense, verifyLicense } from './license';
 import type { DatasetSummary, DeriveOperation, ExportResult, FilterOperator, Recipe, RecipeStep } from './types';
 import { humanBytes, recipeStepDescription } from './types';
 
@@ -24,7 +22,7 @@ const licenseDialog = $<HTMLDialogElement>('#license-dialog');
 const browserFile = $<HTMLInputElement>('#browser-file');
 const exportFormat = $<HTMLSelectElement>('#export-format');
 const BUILD_ID = import.meta.env.VITE_BUILD_ID ?? 'source checkout';
-const APP_VERSION = import.meta.env.VITE_APP_VERSION ?? '0.1.2';
+const APP_VERSION = import.meta.env.VITE_APP_VERSION ?? '0.1.3';
 
 const sampleData: TableData = {
   headers: ['order_id', 'region', 'status', 'amount'],
@@ -55,10 +53,9 @@ function updateConnectivity(): void {
   $('#connection-state').textContent = navigator.onLine ? 'Online · local processing' : 'Offline-ready';
 }
 
-function updateLicenseUI(reason?: string): void {
-  $('#license-badge').textContent = unlocked ? 'Full desk unlocked' : 'Free desk';
-  exportFormat.options[1].textContent = unlocked ? 'JSON Lines' : 'JSON Lines · license required';
-  if (reason && !unlocked) $('#license-notice').textContent = reason === 'offline' ? 'Offline. The last verified license state is in use.' : 'License no longer active. You can paste another token or purchase again.';
+function updateLicenseUI(): void {
+  $('#license-badge').textContent = 'Free desk';
+  exportFormat.options[1].textContent = 'JSON Lines · paid access unavailable';
 }
 
 function displayError(title: string, detail: string): void {
@@ -254,7 +251,7 @@ function renderStepFields(): void {
 
 async function addStep(): Promise<void> {
   const kind = $<HTMLSelectElement>('#step-kind').value as RecipeStep['type'];
-  if (kind === 'join' && !unlocked) { stepDialog.close(); $('#license-notice').textContent = 'A full-desk license unlocks local joins.'; licenseDialog.showModal(); return; }
+  if (kind === 'join' && !unlocked) { stepDialog.close(); $('#license-notice').textContent = 'Paid local joins are unavailable until signed desktop releases are verified.'; licenseDialog.showModal(); return; }
   const name = $<HTMLInputElement>('#step-name').value.trim();
   let step: RecipeStep;
   if (!name) { $('#step-error').textContent = 'Give this step a name so the recipe stays auditable.'; return; }
@@ -301,7 +298,7 @@ async function saveRecipe(): Promise<void> {
   const savedRecipeKey = demoMode ? 'demo:ldw:saved-recipe-keys' : 'ldw:saved-recipe-keys';
   const existingKeys = savedRecipeKeys(savedRecipeKey);
   const currentKey = recipeKey();
-  if (!unlocked && !existingKeys.includes(currentKey) && existingKeys.length >= 3) { $('#license-notice').textContent = 'The free desk includes three saved recipes. A one-time license removes the limit.'; licenseDialog.showModal(); return; }
+  if (!unlocked && !existingKeys.includes(currentKey) && existingKeys.length >= 3) { $('#license-notice').textContent = 'The free desk includes three saved recipes. Paid access is unavailable until signed desktop releases are verified.'; licenseDialog.showModal(); return; }
   const contents = `${JSON.stringify(currentRecipe(), null, 2)}\n`;
   if (isTauri()) {
     const destination = await save({ defaultPath: `${dataset.name.replace(/\.[^.]+$/, '')}.ldw.json`, filters: [{ name: 'Workbench recipe', extensions: ['ldw.json', 'json'] }] });
@@ -322,7 +319,7 @@ async function openRecipe(): Promise<void> {
   try {
     const recipe = JSON.parse(await invoke<string>('read_text_file', { path })) as Recipe;
     if (recipe.schema !== 'local-data-workbench/recipe@1') throw new Error('Unsupported recipe version.');
-    if (!unlocked && recipe.steps.some((step) => step.type === 'join')) { $('#license-notice').textContent = 'This recipe contains a local join, which needs a full-desk license.'; licenseDialog.showModal(); return; }
+    if (!unlocked && recipe.steps.some((step) => step.type === 'join')) { $('#license-notice').textContent = 'This recipe contains a paid local join, which is unavailable until signed desktop releases are verified.'; licenseDialog.showModal(); return; }
     showOnly('loading');
     let summary: DatasetSummary;
     try { summary = await invoke<DatasetSummary>('analyze_file', { path: recipe.source.path }); }
@@ -339,7 +336,7 @@ async function openRecipe(): Promise<void> {
 async function exportData(): Promise<void> {
   if (!dataset) return;
   const format = exportFormat.value as 'csv' | 'jsonl';
-  if (format === 'jsonl' && !unlocked) { $('#license-notice').textContent = 'JSON Lines export is part of the full-desk license. CSV export remains free.'; licenseDialog.showModal(); exportFormat.value = 'csv'; return; }
+  if (format === 'jsonl' && !unlocked) { $('#license-notice').textContent = 'JSON Lines export is paid access and is unavailable until signed desktop releases are verified. CSV export remains free.'; licenseDialog.showModal(); exportFormat.value = 'csv'; return; }
   if (!isTauri()) {
     const data = transformed ?? { headers: dataset.headers, rows: dataset.rows };
     const csv = [data.headers, ...data.rows].map((row) => row.map((value) => `"${value.replaceAll('"', '""')}"`).join(',')).join('\n');
@@ -354,14 +351,6 @@ async function exportData(): Promise<void> {
   } catch (error) { displayError('The result could not be exported.', `${String(error)} Confirm that the destination is writable and the recipe columns still exist.`); }
 }
 
-async function submitLicense(): Promise<void> {
-  const token = $<HTMLTextAreaElement>('#license-token').value.trim();
-  if (!token) { $('#license-notice').textContent = 'Paste the license token from your receipt.'; return; }
-  storeLicense(token); $('#license-notice').textContent = 'Verifying with Sociobot…';
-  const verdict = await verifyLicense(token, true); unlocked = verdict.valid; updateLicenseUI(verdict.reason);
-  $('#license-notice').textContent = verdict.valid ? 'License verified. The full workbench is unlocked.' : verdict.reason === 'offline' ? 'Could not reach verification. The free desk remains available.' : 'This license is not active for Local Data Workbench.';
-}
-
 function bindEvents(): void {
   ['#open-file', '#empty-open', '#error-open'].forEach((selector) => $(selector).addEventListener('click', openSource));
   $('#load-sample').addEventListener('click', () => void loadSample());
@@ -374,13 +363,7 @@ function bindEvents(): void {
   $('#save-recipe').addEventListener('click', saveRecipe);
   $('#open-recipe').addEventListener('click', openRecipe);
   $('#export-data').addEventListener('click', exportData);
-  $('#license-button').addEventListener('click', () => { $<HTMLTextAreaElement>('#license-token').value = getLicenseToken(); licenseDialog.showModal(); });
-  $('#verify-license').addEventListener('click', submitLicense);
-  document.querySelectorAll<HTMLAnchorElement>('a[href^="https://"]').forEach((anchor) => anchor.addEventListener('click', (event) => {
-    if (!isTauri()) return;
-    event.preventDefault();
-    void openUrl(anchor.href);
-  }));
+  $('#license-button').addEventListener('click', () => licenseDialog.showModal());
   window.addEventListener('online', updateConnectivity); window.addEventListener('offline', updateConnectivity);
   document.addEventListener('keydown', (event) => {
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'o') { event.preventDefault(); void openSource(); }
@@ -391,13 +374,9 @@ function bindEvents(): void {
 async function start(): Promise<void> {
   $('#build-id').textContent = `${APP_VERSION} · ${BUILD_ID}`;
   const directDemo = location.search.includes('demo=1');
-  if (!directDemo) captureReturnedLicense();
-  unlocked = directDemo ? false : optimisticUnlock();
+  unlocked = false;
   updateLicenseUI(); updateConnectivity(); renderSource(); renderRecipe(); bindEvents(); showOnly('empty');
   if (directDemo) await loadSample();
-  if (!directDemo && getLicenseToken()) {
-    const verdict = await verifyLicense(); unlocked = verdict.valid; updateLicenseUI(verdict.reason);
-  }
 }
 
 void start();

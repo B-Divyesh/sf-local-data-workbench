@@ -8,6 +8,7 @@ try {
   Invoke-WebRequest -UseBasicParsing "$releaseRoot/latest.json" -OutFile $manifestPath
   $manifest = Get-Content -Raw $manifestPath | ConvertFrom-Json
   $asset = $manifest.platforms.windows
+  if ($null -eq $asset) { throw "No verified Windows installer is published. Nothing was downloaded or installed." }
   $name = [System.IO.Path]::GetFileName(([uri]$asset.url).LocalPath)
   $installer = Join-Path $workDir $name
   Invoke-WebRequest -UseBasicParsing $asset.url -OutFile $installer
@@ -19,7 +20,7 @@ try {
   } else {
     Start-Process -Wait $installer
   }
-  Write-Host "Local Data Workbench installer completed. The preview is unsigned, so Windows may show a SmartScreen notice."
+  Write-Host "Local Data Workbench installer completed."
 } finally {
   if (Test-Path $workDir) { Remove-Item -Recurse -Force $workDir }
 }

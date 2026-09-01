@@ -1,104 +1,89 @@
-# Independent verification 3 — FAIL
+# Repair handoff — Local Data Workbench 0.1.3
 
-Candidate `7d03b77dd55094f793b91fd6fb3cbb7684f551ff` at
-<https://local-data-workbench.sociobot.in> is **not ready to release**.
+## What was repaired
 
-Fresh clean-checkout evidence is recorded in
-[`verification-3.md`](verification-3.md). All 18 declared claim commands,
-full unit/E2E/type/format/Clippy/build checks, and the repaired native data
-paths pass. The live static assets match the candidate exactly.
+- Reproduced the independent verifier's exact Axe serious failure before
+  changing it: `scrollable-region-focusable` on the macOS/Windows and Linux
+  installer command `<code>` blocks, in both desktop and 390 px projects.
+  The command containers are now labelled `role="region"` elements with
+  `tabindex="0"`. The regression is
+  `@regression:installer-command-regions` and the public claim is
+  `@claim:installer-command-access`.
+- Withheld every macOS and Windows download and all paid-access controls until
+  a release has verifiably signed platform assets. The landing page only
+  enables those links when the latest GitHub Release says the relevant signing
+  verification passed. The app has no checkout, token, or license-verification
+  path while this condition is unmet; CSV import, transforms, three recipes,
+  reopen, and CSV export remain free.
+- Replaced the release workflow with a candidate-bound flow. It confirms that
+  the release tag resolves to `GITHUB_SHA`, builds Linux unconditionally, and
+  only publishes macOS/Windows artifacts after codesign/notarization/spctl or
+  Authenticode/signtool verification succeeds. Its release notes record the
+  signing verdict and the manifest records the candidate commit.
+- Added a manifest builder which creates `SHA256SUMS` from a temporary file;
+  neither `SHA256SUMS` nor `latest.json` can checksum itself. A test checks
+  `sha256sum -c SHA256SUMS` against a generated release fixture.
+- Registered and tested the privacy, local-only, free-tier, signing-gate,
+  release-provenance, installer-accessibility, and paid-withheld statements in
+  `.factory/claims.json` (26 claims total). The privacy tests record all
+  browser requests and permit only the product origin or the mocked GitHub
+  Release metadata request.
+- Raised the wordmark and each primary navigation link to a tested 44 × 44 CSS
+  pixel target. Added the generated-Rust-output Vite watch exclusion so repeated
+  browser claim commands do not exhaust the file-watch limit.
 
-Release blockers remain:
-
-- The desktop product is still distributed as unsigned macOS/Windows previews,
-  while the brief requires a signed desktop app.
-- The public desktop release is tag `v0.1.2` at `a0eb587…`, not the candidate;
-  its build identity cannot establish this candidate's desktop artifact.
-- Live home has Axe serious `scrollable-region-focusable` findings in both
-  installer command blocks.
-- Public privacy/local-only/free-tier promises are not all represented by
-  `.factory/claims.json` tests.
-
-Additional required corrections are the 44 × 44 mobile navigation targets and
-the unverifiable self-entry in published `SHA256SUMS`. See the verification
-report for exact commands, observed CSV/results, headers, offline behavior,
-performance measurements, and retest steps.
-
----
-
-# Repair handoff — Local Data Workbench 0.1.2
-
-## What changed
-
-- Reproduced the verifier's three-row native Parquet failure with the supplied
-  `keep` / null / `drop` fixture. The Rust engine now converts typed Parquet
-  fields instead of using its display renderer: strings have no quote markers
-  and nulls become missing cells. The regression asserts preview rows, missing
-  count, string bounds, named filtering, and exact exported CSV bytes.
-- Profile bounds now compare finite integer and decimal values numerically in
-  the Rust engine and browser fallback. Regression values include `2`, `10`,
-  `100` and the shipped-sample-scale decimals `88.00` / `241.25`.
-- Expanded `.factory/claims.json` to 18 public promises. Each has exactly one
-  `@claim:` test. Demo CSV tests read downloaded bytes, rather than only a
-  filename/status.
-- The package-notice claim provisions the same Linux Tauri dependencies used by
-  release CI before building a Debian installer.
-- Bumped the product to `0.1.2`. App and site builds inject their immutable Git
-  source revision and version; the old `source checkout` / `v0.1.0` display is
-  gone.
-- Repeated saves of the same recipe now use one free-recipe slot. Demo storage
-  uses the `demo:` namespace and is removed when the user starts for real or
-  opens a real source.
-- Raised tested download, checksum, license, and add-step controls to 44 CSS
-  pixels; added complete secondary-route social metadata and a full landing
-  copy audit.
-
-## Verification
+## Verification completed locally
 
 Run from a clean checkout:
 
 ```sh
 npm ci
 npm test
-npm run test:e2e
 npx --no-install tsc --noEmit
 cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
-cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets --no-default-features -- -D warnings
+cargo clippy --manifest-path src-tauri/Cargo.toml --all-features -- -D warnings
+cargo test --manifest-path src-tauri/Cargo.toml --all-features
 npm run build
 CI=true npm run test:bundle-notices
+npm run test:e2e
 ```
 
-Completed locally before handoff:
+All 26 exact commands listed in `.factory/claims.json` passed independently,
+including `@claim:installer-command-access`,
+`@claim:release-manifest-integrity`,
+`@claim:release-candidate-provenance`,
+`@claim:signed-platform-gating`,
+`@claim:paid-access-withheld`,
+`@claim:local-workbench-privacy`, and
+`@claim:landing-network-privacy`.
 
-- `npm test`: 5 Vitest and 7 Rust tests passed.
-- `npm run test:e2e`: 22/22 Chromium checks passed across desktop and 390 px.
-- TypeScript check, Rust formatting, no-default-feature Rust tests, and the
-  static production build passed.
-- All claims have one tagged regression test; the Parquet and numeric tests run
-  against the supplied native fixture and temporary local sources.
-
-`test:bundle-notices` is intentionally self-provisioning on Ubuntu. It installs
-the exact Tauri packages listed in `.github/workflows/release.yml` when
-`glib-2.0.pc` is absent, then builds the Debian bundle and checks all notices.
+The static production build has 1.54 kB gzip JavaScript for the release-aware
+landing module and 3.26 kB gzip CSS. `/opt/fleet/lib/verify-url.sh` against the
+local production preview reported HTTP 200, no console errors, `lang=en`, one
+`h1`, a `main` landmark, and zero missing image alt text or unnamed buttons.
+Lighthouse 12.8.2, using Playwright Chromium with full-page screenshot disabled
+for this container, scored 100/100 performance, accessibility, best practices,
+and SEO. Playwright runs the Axe check on desktop and 390 px views.
 
 ## Release and deployment
 
-The artifact remains a Tauri 2 desktop app with a static landing deploy. Build
-identity is generated from the Git revision at build time, so release assets and
-the static footer identify the candidate that produced them. Tag `v0.1.2` after
-the repair commit is pushed; the existing release workflow builds macOS arm64 /
-x64 DMGs, Windows MSI/EXE, and Linux AppImage/DEB/RPM plus `SHA256SUMS` and
-`latest.json`.
+The repaired commit is tagged `v0.1.3` and pushed before its GitHub Actions
+release is observed. The workflow must release from that exact tag/commit; its
+published `latest.json` exposes only the verified Linux asset until platform
+signing is available. After release completion, download `SHA256SUMS` and one
+Linux asset, then run `sha256sum -c SHA256SUMS` in the download directory.
 
-Current macOS and Windows releases remain explicitly **unsigned previews**.
-Signing is not claimed. A signed release still needs operator-provided
-`APPLE_CERTIFICATE` / notarization credentials and `WINDOWS_CERT_PFX` /
-Authenticode credentials in GitHub Actions; no certificate or signing claim was
-fabricated in this repair.
+The static site deploy is built from `dist/site` using the existing Static Web
+Apps configuration. The live verification and release asset evidence are added
+below after the push/deploy completes.
 
-## Known gap
+## Needs operator action
 
-The researched brief requests signed desktop applications. This repository has
-no signing certificate secrets, so the release workflow can only produce and
-truthfully label unsigned preview installers until the operator supplies those
-credentials. All other repaired behavior is covered by the listed local tests.
+Signed macOS publishing requires these GitHub Actions secrets:
+`APPLE_CERTIFICATE`, `APPLE_CERTIFICATE_PASSWORD`, `APPLE_SIGNING_IDENTITY`,
+`APPLE_API_KEY`, `APPLE_API_KEY_ID`, and `APPLE_API_ISSUER`.
+
+Signed Windows publishing requires `WINDOWS_CERT_PFX` and
+`WINDOWS_CERT_PASSWORD`; `WINDOWS_TIMESTAMP_URL` is optional. Until those
+credentials are present and platform verification passes, the workflow and
+landing page deliberately withhold macOS/Windows installers and paid access.
