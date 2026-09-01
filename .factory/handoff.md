@@ -1,4 +1,4 @@
-# Repair handoff — Local Data Workbench 0.1.5
+# Repair handoff — Local Data Workbench 0.1.6
 
 ## What was repaired
 
@@ -68,7 +68,7 @@ and SEO. Playwright runs the Axe check on desktop and 390 px views.
 
 ## Release and deployment
 
-The repaired commit is tagged `v0.1.5` and pushed before its GitHub Actions
+The repaired commit is tagged `v0.1.6` and pushed before its GitHub Actions
 release is observed. The workflow must release from that exact tag/commit; its
 published `latest.json` exposes only the verified Linux asset until platform
 signing is available. After release completion, download `SHA256SUMS` and one

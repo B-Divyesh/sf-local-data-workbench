@@ -2,7 +2,7 @@ import './site.css';
 
 const RELEASE_API = 'https://api.github.com/repos/B-Divyesh/sf-local-data-workbench/releases/latest';
 const BUILD_ID = import.meta.env.VITE_BUILD_ID ?? 'source checkout';
-const APP_VERSION = import.meta.env.VITE_APP_VERSION ?? '0.1.5';
+const APP_VERSION = import.meta.env.VITE_APP_VERSION ?? '0.1.6';
 
 interface PlatformAsset { url: string; sha256?: string; name?: string }
 interface Manifest { version: string; platforms: Record<string, PlatformAsset> }

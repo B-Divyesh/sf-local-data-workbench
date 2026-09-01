@@ -16,7 +16,9 @@ cd "$asset_dir"
 ## `actions/download-artifact` preserves bundle directories. Release assets
 ## must be flat so their GitHub URL names match the checksummed filenames.
 find . -mindepth 2 -type f -print | while IFS= read -r asset; do
-  target="./$(basename "$asset")"
+  # GitHub release assets normalize spaces to dots. Match that public name in
+  # the checksum manifest and latest.json before upload.
+  target="./$(basename "$asset" | tr ' ' '.')"
   if [ -e "$target" ]; then
     echo "Release asset name collision: $target" >&2
     exit 2
