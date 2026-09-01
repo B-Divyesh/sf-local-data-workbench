@@ -573,8 +573,8 @@
       "degree": 16
     },
     {
-      "id": "src_tauri_src_engine_iterate_rows",
-      "label": "iterate_rows()",
+      "id": "src_app_bindevents",
+      "label": "bindEvents()",
       "degree": 15
     },
     {
@@ -583,18 +583,13 @@
       "degree": 15
     },
     {
-      "id": "src_app_bindevents",
-      "label": "bindEvents()",
+      "id": "src_tauri_src_engine_iterate_rows",
+      "label": "iterate_rows()",
       "degree": 15
     },
     {
-      "id": "package_scripts",
-      "label": "scripts",
-      "degree": 12
-    },
-    {
-      "id": "src_tauri_src_engine_source_headers",
-      "label": "source_headers()",
+      "id": "src_app_start",
+      "label": "start()",
       "degree": 12
     },
     {
@@ -603,24 +598,40 @@
       "degree": 12
     },
     {
-      "id": "src_app_start",
-      "label": "start()",
+      "id": "src_tauri_src_engine_source_headers",
+      "label": "source_headers()",
       "degree": 12
     },
     {
-      "id": "src_tauri_src_engine_json_headers",
-      "label": "json_headers()",
+      "id": "package_scripts",
+      "label": "scripts",
+      "degree": 12
+    },
+    {
+      "id": "src_app_openrecipe",
+      "label": "openRecipe()",
       "degree": 11
     },
     {
-      "id": "src_tauri_src_engine_compile_steps",
-      "label": "compile_steps()",
+      "id": "src_app_setstatus",
+      "label": "setStatus()",
       "degree": 11
     }
   ],
   "surprises": [
     {
       "source": "analyze_file()",
+      "target": "DatasetSummary",
+      "source_files": [
+        "src-tauri/src/lib.rs",
+        "src-tauri/src/engine.rs"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "bridges separate communities"
+    },
+    {
+      "source": "sample_dataset()",
       "target": "DatasetSummary",
       "source_files": [
         "src-tauri/src/lib.rs",
@@ -655,17 +666,6 @@
     {
       "source": "preview_recipe()",
       "target": "RecipeStep",
-      "source_files": [
-        "src-tauri/src/lib.rs",
-        "src-tauri/src/engine.rs"
-      ],
-      "confidence": "EXTRACTED",
-      "relation": "references",
-      "why": "bridges separate communities"
-    },
-    {
-      "source": "preview_recipe()",
-      "target": "TableData",
       "source_files": [
         "src-tauri/src/lib.rs",
         "src-tauri/src/engine.rs"
