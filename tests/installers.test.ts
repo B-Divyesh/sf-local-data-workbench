@@ -61,13 +61,14 @@ describe('installer verification', () => {
     expect(workflow).toContain('needs.build-windows.result == \'success\'');
   });
 
-  it('@regression:release-workflow publishes honest unsigned packages when operator certificates are unavailable', async () => {
+  it('@regression:macos-unsigned-environment removes empty Apple signing variables before bundling', async () => {
     const workflow = await readFile(new URL('../.github/workflows/release.yml', import.meta.url), 'utf8');
     expect(workflow).toContain('codesign --verify --deep --strict');
     expect(workflow).toContain('spctl --assess --type open');
     expect(workflow).toContain('signtool verify /pa /all /v');
     expect(workflow).toContain("macOS signing: unsigned (operator certificate unavailable)");
     expect(workflow).toContain("Windows signing: unsigned (operator certificate unavailable)");
+    expect(workflow).toContain('unset APPLE_CERTIFICATE APPLE_CERTIFICATE_PASSWORD APPLE_SIGNING_IDENTITY');
     expect(workflow).not.toContain("if: needs.signing-readiness.outputs.macos == 'true'\n    strategy");
   });
 });

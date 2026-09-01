@@ -146,6 +146,10 @@ jobs:
           set -eu
           if [ "$MACOS_SIGNED" = true ]; then
             node -e 'const fs=require("fs");const p="src-tauri/tauri.conf.json";const c=JSON.parse(fs.readFileSync(p));c.bundle.macOS={...(c.bundle.macOS||{}),signingIdentity:process.env.APPLE_SIGNING_IDENTITY};fs.writeFileSync(p,JSON.stringify(c,null,2)+"\n")'
+          else
+            # Tauri treats even empty Apple signing variables as a request to
+            # sign. Remove them entirely so an honest unsigned build bundles.
+            unset APPLE_CERTIFICATE APPLE_CERTIFICATE_PASSWORD APPLE_SIGNING_IDENTITY APPLE_API_KEY APPLE_API_KEY_ID APPLE_API_ISSUER
           fi
           npm run tauri build -- --target "${{ matrix.target }}" --bundles dmg
       - name: Notarize and verify signed disk images
