@@ -37,7 +37,7 @@ npm run tauri build  # current-platform desktop bundle
 npm run test:bundle-notices # builds a Debian bundle and checks its notices
 ```
 
-The static factory deploy publishes `dist/site` (with `index.html` at that root). GitHub Actions publishes Linux assets on tagged releases. macOS and Windows jobs run only when their signing credentials are present and their signatures pass verification. Release builds receive the immutable Git commit as `VITE_BUILD_ID`; the app and site footer display it.
+The static factory deploy publishes `dist/site` (with `index.html` at that root). GitHub Actions builds Linux, macOS, and Windows packages from the tagged commit. macOS and Windows packages are signed only when the operator supplies the required certificates; otherwise they are published as unsigned and labelled that way. Release builds receive the immutable Git commit as `VITE_BUILD_ID`; the app and site footer display it.
 
 ## Install
 
@@ -47,7 +47,7 @@ The landing page detects the visitor's operating system and resolves assets from
 curl -fsSL https://local-data-workbench.sociobot.in/install.sh | sh
 ```
 
-The Linux installer verifies SHA-256 before installing the downloaded AppImage. It stops before downloading when the release manifest has no verified asset for the current platform. The manifest is delivered over HTTPS and is not cryptographically signed. Windows and macOS installer commands are withheld with their signed builds.
+The Linux installer verifies SHA-256 before installing the downloaded AppImage. The macOS and Windows installers also verify SHA-256. They print an explicit warning if their package is unsigned. The manifest is delivered over HTTPS and is not cryptographically signed.
 
 ## Recipe format
 

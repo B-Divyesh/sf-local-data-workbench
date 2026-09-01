@@ -20,13 +20,18 @@ if ! command -v python3 >/dev/null 2>&1; then
 fi
 
 if ! python3 -c 'import json,sys; manifest=json.load(open(sys.argv[1])); sys.exit(0 if sys.argv[2] in manifest.get("platforms", {}) else 1)' "$WORK_DIR/latest.json" "$PLATFORM"; then
-  echo "No verified installer is published for this platform. Nothing was downloaded or installed." >&2
+  echo "No installer is published for this platform. Nothing was downloaded or installed." >&2
   exit 1
 fi
 
 URL="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["platforms"][sys.argv[2]]["url"])' "$WORK_DIR/latest.json" "$PLATFORM")"
 EXPECTED="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["platforms"][sys.argv[2]]["sha256"])' "$WORK_DIR/latest.json" "$PLATFORM")"
 NAME="$(basename "$URL")"
+if [ "$PLATFORM" = "mac-arm64" ] || [ "$PLATFORM" = "mac-x64" ]; then
+  if ! python3 -c 'import json,sys; manifest=json.load(open(sys.argv[1])); sys.exit(0 if manifest.get("signing", {}).get("macos") else 1)' "$WORK_DIR/latest.json"; then
+    echo "This macOS disk image is unsigned. Its SHA-256 is checked below, but no Apple signature is claimed." >&2
+  fi
+fi
 curl -fL "$URL" -o "$WORK_DIR/$NAME"
 
 if command -v sha256sum >/dev/null 2>&1; then ACTUAL="$(sha256sum "$WORK_DIR/$NAME" | awk '{print $1}')"; else ACTUAL="$(shasum -a 256 "$WORK_DIR/$NAME" | awk '{print $1}')"; fi

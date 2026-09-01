@@ -1,12 +1,19 @@
 import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { readFile } from 'node:fs/promises';
+import { execFileSync } from 'node:child_process';
 
 const RELEASE_API = 'https://api.github.com/repos/B-Divyesh/sf-local-data-workbench/releases/latest';
+const CANDIDATE = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
 
 async function mockRelease(page: Page, body: object = {
-  tag_name: 'v0.1.6', target_commitish: 'candidate-commit', body: 'Build commit: candidate-commit\nmacOS signing: unavailable\nWindows signing: unavailable', assets: [
-    { name: 'Local_Data_Workbench_0.1.6_amd64.AppImage', browser_download_url: 'https://github.com/B-Divyesh/sf-local-data-workbench/releases/download/v0.1.6/Local_Data_Workbench_0.1.6_amd64.AppImage' }
+  tag_name: 'v0.1.7', body: `Source commit: ${CANDIDATE}\nmacOS signing: unsigned (operator certificate unavailable)\nWindows signing: unsigned (operator certificate unavailable)`, assets: [
+    { name: 'Local.Data.Workbench_0.1.7_amd64.AppImage', digest: 'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', browser_download_url: 'https://github.com/B-Divyesh/sf-local-data-workbench/releases/download/v0.1.7/Local.Data.Workbench_0.1.7_amd64.AppImage' },
+    { name: 'Local.Data.Workbench_0.1.7_aarch64.dmg', digest: 'sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb', browser_download_url: 'https://github.com/B-Divyesh/sf-local-data-workbench/releases/download/v0.1.7/Local.Data.Workbench_0.1.7_aarch64.dmg' },
+    { name: 'Local.Data.Workbench_0.1.7_x64.dmg', digest: 'sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc', browser_download_url: 'https://github.com/B-Divyesh/sf-local-data-workbench/releases/download/v0.1.7/Local.Data.Workbench_0.1.7_x64.dmg' },
+    { name: 'Local.Data.Workbench_0.1.7_x64-setup.exe', digest: 'sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd', browser_download_url: 'https://github.com/B-Divyesh/sf-local-data-workbench/releases/download/v0.1.7/Local.Data.Workbench_0.1.7_x64-setup.exe' },
+    { name: 'latest.json', digest: 'sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee', browser_download_url: 'https://github.com/B-Divyesh/sf-local-data-workbench/releases/download/v0.1.7/latest.json' },
+    { name: 'SHA256SUMS', digest: 'sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff', browser_download_url: 'https://github.com/B-Divyesh/sf-local-data-workbench/releases/download/v0.1.7/SHA256SUMS' }
   ]
 }): Promise<void> {
   await page.route(RELEASE_API, (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(body) }));
@@ -20,7 +27,8 @@ test('@claim:sample-demo landing page has a one-click isolated sample path', asy
   await expect(page).toHaveTitle(/Local Data Workbench/);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(/Inspect local data files/);
   await expect(page.getByRole('link', { name: 'Try it with sample data' })).toHaveAttribute('href', '/demo/');
-  await expect(page.locator('#primary-download')).toHaveAttribute('aria-disabled', 'true');
+  await expect(page.locator('#primary-download')).toHaveAttribute('href', /releases\/download\/v0\.1\.7\//);
+  await expect(page.locator('#primary-download')).not.toHaveAttribute('aria-disabled');
   await expect(page.getByText('Sample data stays in the page', { exact: false }).first()).toBeVisible();
   await page.getByRole('link', { name: 'Try it with sample data' }).click();
   await expect(page.getByText('Demo — sample data, nothing is saved', { exact: false })).toBeVisible();
@@ -122,7 +130,7 @@ test('@claim:build-identity built pages identify their version and source revisi
   await expect(page.locator('[data-build-id]').last()).not.toContainText('source checkout');
   await page.goto('http://127.0.0.1:1420/');
   await expect(page.locator('#build-id')).not.toContainText('source checkout');
-  await expect(page.locator('#build-id')).toContainText('0.1.6');
+  await expect(page.locator('#build-id')).toContainText('0.1.7');
 });
 
 test('@claim:local-only-demo demo sends no third-party requests', async ({ page }) => {
@@ -231,19 +239,33 @@ test('@claim:paid-access-withheld no checkout or token verification is available
   expect(await page.locator('#verify-license, #license-token, a[href*="checkout"]').count()).toBe(0);
 });
 
-test('@claim:signed-platform-gating unsigned release assets never enable macOS or Windows downloads', async ({ page }) => {
+test('@claim:package-signing-disclosure unsigned macOS and Windows packages remain downloadable with an explicit status', async ({ page }) => {
   await mockRelease(page, {
-    tag_name: 'v0.1.6', target_commitish: 'candidate-commit', body: 'Build commit: candidate-commit\nmacOS signing: unavailable\nWindows signing: unavailable', assets: [
-      { name: 'Local_Data_Workbench_0.1.6_x64.dmg', browser_download_url: 'https://example.invalid/unsigned.dmg' },
-      { name: 'Local_Data_Workbench_0.1.6_x64-setup.exe', browser_download_url: 'https://example.invalid/unsigned.exe' },
-      { name: 'Local_Data_Workbench_0.1.6_amd64.AppImage', browser_download_url: 'https://example.invalid/linux.AppImage' }
+    tag_name: 'v0.1.7', body: `Source commit: ${CANDIDATE}\nmacOS signing: unsigned (operator certificate unavailable)\nWindows signing: unsigned (operator certificate unavailable)`, assets: [
+      { name: 'Local.Data.Workbench_0.1.7_aarch64.dmg', digest: 'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', browser_download_url: 'https://example.invalid/unsigned-arm.dmg' },
+      { name: 'Local.Data.Workbench_0.1.7_x64.dmg', digest: 'sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb', browser_download_url: 'https://example.invalid/unsigned.dmg' },
+      { name: 'Local.Data.Workbench_0.1.7_x64-setup.exe', digest: 'sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc', browser_download_url: 'https://example.invalid/unsigned.exe' },
+      { name: 'Local.Data.Workbench_0.1.7_amd64.AppImage', digest: 'sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd', browser_download_url: 'https://example.invalid/linux.AppImage' },
+      { name: 'latest.json', digest: 'sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee', browser_download_url: 'https://example.invalid/latest.json' },
+      { name: 'SHA256SUMS', digest: 'sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff', browser_download_url: 'https://example.invalid/SHA256SUMS' }
     ]
   });
   await page.goto('http://127.0.0.1:4173/');
-  await expect(page.locator('[data-platform="mac-arm64"]')).toBeHidden();
-  await expect(page.locator('[data-platform="mac-x64"]')).toBeHidden();
-  await expect(page.locator('[data-platform="windows"]')).toBeHidden();
-  await expect(page.locator('[data-platform-unavailable="macos"]')).toBeVisible();
-  await expect(page.locator('[data-platform-unavailable="windows"]')).toBeVisible();
+  await expect(page.locator('[data-platform="mac-arm64"]')).toHaveAttribute('href', 'https://example.invalid/unsigned-arm.dmg');
+  await expect(page.locator('[data-platform="mac-x64"]')).toHaveAttribute('href', 'https://example.invalid/unsigned.dmg');
+  await expect(page.locator('[data-platform="windows"]')).toHaveAttribute('href', 'https://example.invalid/unsigned.exe');
+  await expect(page.locator('[data-signing-status="macos"]')).toHaveText('Unsigned package — certificate unavailable.');
+  await expect(page.locator('[data-signing-status="windows"]')).toHaveText('Unsigned package — certificate unavailable.');
   await expect(page.locator('[data-platform="linux"]')).toHaveAttribute('href', 'https://example.invalid/linux.AppImage');
+});
+
+test('@regression:release-provenance-mismatch stale release assets never become downloadable from a repaired page', async ({ page }) => {
+  await mockRelease(page, {
+    tag_name: 'v0.1.7', body: 'Source commit: 0000000000000000000000000000000000000000\nmacOS signing: verified and notarized\nWindows signing: verified', assets: []
+  });
+  await page.goto('http://127.0.0.1:4173/');
+  await expect(page.locator('#primary-download')).toHaveAttribute('aria-disabled', 'true');
+  await expect(page.locator('#primary-download')).not.toHaveAttribute('href');
+  await expect(page.locator('[data-platform="linux"]')).toBeHidden();
+  await expect(page.locator('#release-state')).toContainText('did not match this page');
 });

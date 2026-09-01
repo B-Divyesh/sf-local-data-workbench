@@ -8,7 +8,10 @@ try {
   Invoke-WebRequest -UseBasicParsing "$releaseRoot/latest.json" -OutFile $manifestPath
   $manifest = Get-Content -Raw $manifestPath | ConvertFrom-Json
   $asset = $manifest.platforms.windows
-  if ($null -eq $asset) { throw "No verified Windows installer is published. Nothing was downloaded or installed." }
+  if ($null -eq $asset) { throw "No Windows installer is published. Nothing was downloaded or installed." }
+  if (-not $manifest.signing.windows) {
+    Write-Warning "This Windows installer is unsigned. Its SHA-256 is checked below, but no Authenticode signature is claimed."
+  }
   $name = [System.IO.Path]::GetFileName(([uri]$asset.url).LocalPath)
   $installer = Join-Path $workDir $name
   Invoke-WebRequest -UseBasicParsing $asset.url -OutFile $installer

@@ -35,26 +35,28 @@ test ! -s SHA256SUMS || ! grep -Eq '[[:space:]](\./)?(SHA256SUMS|latest\.json)$'
 
 asset_json() {
   asset_name=$1
+  signed=$2
   asset_hash=$(sha256sum "$asset_name" | awk '{print $1}')
   asset_encoded=$(jq -rn --arg value "$asset_name" '$value|@uri')
-  jq -n --arg name "$asset_name" --arg url "https://github.com/B-Divyesh/sf-local-data-workbench/releases/download/$version/$asset_encoded" --arg sha256 "$asset_hash" '{name:$name,url:$url,sha256:$sha256}'
+  jq -n --arg name "$asset_name" --arg url "https://github.com/B-Divyesh/sf-local-data-workbench/releases/download/$version/$asset_encoded" --arg sha256 "$asset_hash" --argjson signed "$signed" '{name:$name,url:$url,sha256:$sha256,signed:$signed}'
 }
 
 linux_file=$(find . -maxdepth 1 -name '*.AppImage' -printf '%f\n' | LC_ALL=C sort | head -n1)
 test -n "$linux_file"
-jq -n --arg version "$version" --arg commit "$commit" --argjson macos "$macos_signed" --argjson windows "$windows_signed" --argjson linux "$(asset_json "$linux_file")" '{version:$version,commit:$commit,signing:{macos:$macos,windows:$windows},platforms:{linux:$linux}}' > latest.json
+arm_file=$(find . -maxdepth 1 -iname '*.dmg' \( -iname '*aarch64*' -o -iname '*arm64*' \) -printf '%f\n' | LC_ALL=C sort | head -n1)
+x64_file=$(find . -maxdepth 1 -iname '*.dmg' ! -iname '*aarch64*' ! -iname '*arm64*' -printf '%f\n' | LC_ALL=C sort | head -n1)
+windows_file=$(find . -maxdepth 1 \( -name '*.msi' -o -name '*.exe' \) -printf '%f\n' | LC_ALL=C sort | head -n1)
+test -n "$arm_file" && test -n "$x64_file" && test -n "$windows_file"
 
-if [ "$macos_signed" = true ]; then
-  arm_file=$(find . -maxdepth 1 -iname '*aarch64*.dmg' -printf '%f\n' | LC_ALL=C sort | head -n1)
-  x64_file=$(find . -maxdepth 1 -name '*.dmg' ! -iname '*aarch64*' -printf '%f\n' | LC_ALL=C sort | head -n1)
-  test -n "$arm_file" && test -n "$x64_file"
-  jq --argjson arm "$(asset_json "$arm_file")" --argjson x64 "$(asset_json "$x64_file")" '.platforms["mac-arm64"]=$arm | .platforms["mac-x64"]=$x64' latest.json > latest.tmp && mv latest.tmp latest.json
-fi
-
-if [ "$windows_signed" = true ]; then
-  windows_file=$(find . -maxdepth 1 \( -name '*.msi' -o -name '*.exe' \) -printf '%f\n' | LC_ALL=C sort | head -n1)
-  test -n "$windows_file"
-  jq --argjson windows "$(asset_json "$windows_file")" '.platforms.windows=$windows' latest.json > latest.tmp && mv latest.tmp latest.json
-fi
+jq -n \
+  --arg version "$version" \
+  --arg commit "$commit" \
+  --argjson macos "$macos_signed" \
+  --argjson windows "$windows_signed" \
+  --argjson linux "$(asset_json "$linux_file" false)" \
+  --argjson arm "$(asset_json "$arm_file" "$macos_signed")" \
+  --argjson x64 "$(asset_json "$x64_file" "$macos_signed")" \
+  --argjson windows_asset "$(asset_json "$windows_file" "$windows_signed")" \
+  '{version:$version,commit:$commit,signing:{macos:$macos,windows:$windows},platforms:{linux:$linux,"mac-arm64":$arm,"mac-x64":$x64,windows:$windows_asset}}' > latest.json
 
 jq empty latest.json

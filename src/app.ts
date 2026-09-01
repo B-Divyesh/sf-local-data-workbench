@@ -22,7 +22,7 @@ const licenseDialog = $<HTMLDialogElement>('#license-dialog');
 const browserFile = $<HTMLInputElement>('#browser-file');
 const exportFormat = $<HTMLSelectElement>('#export-format');
 const BUILD_ID = import.meta.env.VITE_BUILD_ID ?? 'source checkout';
-const APP_VERSION = import.meta.env.VITE_APP_VERSION ?? '0.1.6';
+const APP_VERSION = import.meta.env.VITE_APP_VERSION ?? '0.1.7';
 
 const sampleData: TableData = {
   headers: ['order_id', 'region', 'status', 'amount'],

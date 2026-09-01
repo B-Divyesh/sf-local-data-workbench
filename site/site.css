@@ -81,6 +81,8 @@ h3 { margin:0 0 8px; font:700 24px/1.1 var(--display); }
 .download-grid article:last-child { border:0; }
 .platform-mark { font:48px/1 var(--display); }
 .download-grid p { min-height:48px; color:var(--muted); }
+.download-grid .signing-status { min-height:0; margin:8px 0 0; font-weight:700; }
+.download-grid a[data-unsigned]::after { content:" — unsigned"; }
 .download-grid a { min-height:44px; display:inline-flex; align-items:center; margin:5px 0; font-weight:700; }
 .installer-command { display:block; width:100%; min-height:44px; margin:14px 0; padding:13px 10px; overflow:auto; border:1px solid var(--rule); background:var(--news); font-size:11px; white-space:nowrap; }
 .installer-command code { font:inherit; }

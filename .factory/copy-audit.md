@@ -11,11 +11,12 @@ no banned plain-words terms.
 | For analysts and engineers who need to reshape CSV, JSON, or Parquet files without writing a one-off script. | 18 | pass |
 | Try it with sample data | 6 | pass |
 | Opens an isolated sample project. | 5 | pass |
-| Download the desktop app | 5 | pass |
+| Checking desktop downloads | 3 | pass |
 | Sample opens in one click | 5 | pass |
 | Sample data stays in the page | 6 | pass |
 | Recipes are JSON files | 4 | pass |
-| Linux build available | 3 | pass |
+| Every package shows its checksum and signing status. | 8 | pass |
+| macOS and Windows may be unsigned until operator certificates are available. | 10 | pass |
 | Turn a source file into a repeatable result. | 9 | pass |
 | Open a file, name each change, and save the recipe beside your output. | 14 | pass |
 | Read CSV, JSON/JSONL, and Parquet directly from disk. | 8 | pass |
@@ -35,22 +36,23 @@ no banned plain-words terms.
 | Inspect files, transform rows, save three recipes, reopen recipes, and export CSV without a paid license. | 16 | pass |
 | Paid access paused | 3 | pass |
 | No checkout or license verification is offered until signed macOS and Windows installers are verified. | 15 | pass |
-| Linux builds are available. | 4 | pass |
-| macOS and Windows downloads stay withheld until signed installers are verified. | 11 | pass |
-| Signed macOS installers are not available yet. | 7 | pass |
-| Signed Windows installers are not available yet. | 7 | pass |
+| macOS packages are being published. | 5 | pass |
+| Windows packages are being published. | 5 | pass |
+| Signing status loads with the release. | 6 | pass |
 | The installer verifies SHA-256 before placing the AppImage in ~/.local/bin. | 10 | pass |
 | See the sample project in three steps. | 8 | pass |
 | Monthly orders appears with types and totals. | 7 | pass |
 | Keep only completed rows with a named step. | 9 | pass |
 | Download the transformed sample without touching a real file. | 9 | pass |
 | It opens, filters, and exports a selected fixture while recording no request to another origin. | 14 | pass |
-| They are withheld until their installers are signed and the release workflow verifies those signatures. | 15 | pass |
+| Its SHA-256 checksum is published, but no macOS or Windows signature is claimed. | 14 | pass |
+| The release card states the current signing status. | 9 | pass |
 | Every desktop installer includes the MIT application license, third-party notices, and the Apache 2.0 notice for the Arrow Parquet dependency. | 21 | pass |
 | Inspect and reshape local data files with saved recipes. | 9 | pass |
 
 Dynamic release text is intentionally limited to release version, immutable
-source revision, installer filename, and checksum availability.
+source revision, installer filename, checksum availability, and an explicit
+signed or unsigned package status.
 
 ## Terminology
 

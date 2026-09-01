@@ -36,9 +36,9 @@
           <div class="hero-actions">
             <a class="button primary" href="/demo/">Try it with sample data</a>
             <span class="action-note">Opens an isolated sample project.</span>
-            <a id="primary-download" class="text-link" href="https://github.com/B-Divyesh/sf-local-data-workbench/releases/latest">Download the desktop app</a>
+            <a id="primary-download" class="text-link" aria-disabled="true">Checking desktop downloads</a>
           </div>
-          <p id="download-detail" class="download-detail" role="status">Detecting your platform…</p>
+          <p id="download-detail" class="download-detail" role="status">Checking a release that matches this page…</p>
         </div>
         <figure class="hero-art">
           <picture>
@@ -119,15 +119,15 @@
         <header class="section-lede">
           <p class="eyebrow">Current release</p>
           <h2 id="download-title">Download the desktop app.</h2>
-          <p>Linux builds are available. macOS and Windows downloads stay withheld until signed installers are verified.</p>
+          <p>Every package shows its checksum and signing status. macOS and Windows may be unsigned until operator certificates are available.</p>
         </header>
         <div class="download-grid">
-          <article data-platform-card="macos"><span class="platform-mark" aria-hidden="true">⌘</span><h3>macOS</h3><p>Apple silicon and Intel disk images.</p><a data-platform="mac-arm64" hidden>Apple silicon</a><a data-platform="mac-x64" hidden>Intel</a><p class="platform-unavailable" data-platform-unavailable="macos">Signed macOS installers are not available yet.</p></article>
-          <article data-platform-card="windows"><span class="platform-mark" aria-hidden="true">⊞</span><h3>Windows</h3><p>Windows 10/11 installer.</p><a data-platform="windows" hidden>Download installer</a><p class="platform-unavailable" data-platform-unavailable="windows">Signed Windows installers are not available yet.</p></article>
-          <article data-platform-card="linux"><span class="platform-mark" aria-hidden="true">#</span><h3>Linux</h3><p>AppImage and Debian package.</p><a data-platform="linux" href="https://github.com/B-Divyesh/sf-local-data-workbench/releases/latest">Download AppImage</a><div class="installer-command" role="region" aria-label="Linux installer command" tabindex="0"><code>curl -fsSL https://local-data-workbench.sociobot.in/install.sh | sh</code></div><small>The installer verifies SHA-256 before placing the AppImage in ~/.local/bin.</small></article>
+          <article data-platform-card="macos"><span class="platform-mark" aria-hidden="true">⌘</span><h3>macOS</h3><p>Apple silicon and Intel disk images.</p><a data-platform="mac-arm64" hidden>Apple silicon</a><a data-platform="mac-x64" hidden>Intel</a><p class="platform-unavailable" data-platform-unavailable="macos">macOS packages are being published.</p><p class="signing-status" data-signing-status="macos" role="status">Signing status loads with the release.</p></article>
+          <article data-platform-card="windows"><span class="platform-mark" aria-hidden="true">⊞</span><h3>Windows</h3><p>Windows 10/11 installer.</p><a data-platform="windows" hidden>Download installer</a><p class="platform-unavailable" data-platform-unavailable="windows">Windows packages are being published.</p><p class="signing-status" data-signing-status="windows" role="status">Signing status loads with the release.</p></article>
+          <article data-platform-card="linux"><span class="platform-mark" aria-hidden="true">#</span><h3>Linux</h3><p>AppImage and Debian package.</p><a data-platform="linux" hidden>Download AppImage</a><div class="installer-command" role="region" aria-label="Linux installer command" tabindex="0"><code>curl -fsSL https://local-data-workbench.sociobot.in/install.sh | sh</code></div><small>The installer verifies SHA-256 before placing the AppImage in ~/.local/bin.</small></article>
         </div>
         <p id="release-state" class="release-state" role="status">Checking the latest published checksums…</p>
-        <p class="release-state">Verify a download: <a href="https://github.com/B-Divyesh/sf-local-data-workbench/releases/latest/download/latest.json">latest.json</a> · <a href="https://github.com/B-Divyesh/sf-local-data-workbench/releases/latest/download/SHA256SUMS">SHA256SUMS</a></p>
+        <p class="release-state">Verify a download: <a id="release-manifest" aria-disabled="true">latest.json</a> · <a id="release-sums" aria-disabled="true">SHA256SUMS</a> · <a href="https://github.com/B-Divyesh/sf-local-data-workbench/releases">Release history</a></p>
       </section>
 
       <section class="walkthrough section-rule" aria-labelledby="walkthrough-title">
@@ -137,7 +137,7 @@
       <section class="faq section-rule" aria-labelledby="faq-title">
         <h2 id="faq-title">Privacy and releases</h2>
         <details><summary>What does the local-workbench test prove?</summary><p>It opens, filters, and exports a selected fixture while recording no request to another origin.</p></details>
-        <details><summary>Why are macOS and Windows downloads unavailable?</summary><p>They are withheld until their installers are signed and the release workflow verifies those signatures.</p></details>
+        <details><summary>What does an unsigned package mean?</summary><p>Its SHA-256 checksum is published, but no macOS or Windows signature is claimed. The release card states the current signing status.</p></details>
         <details><summary>Where are the application and native notices?</summary><p>Every desktop installer includes the MIT application license, third-party notices, and the Apache 2.0 notice for the Arrow Parquet dependency.</p></details>
       </section>
     </main>

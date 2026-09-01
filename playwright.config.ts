@@ -2,7 +2,11 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests/e2e',
-  fullyParallel: true,
+  // The offline claim intentionally opens an isolated context. Keeping one
+  // Chromium worker avoids a headless-shell crash seen when that context races
+  // other browser fixtures on constrained Linux CI runners.
+  fullyParallel: false,
+  workers: 1,
   retries: 0,
   reporter: 'line',
   use: { trace: 'retain-on-failure' },
