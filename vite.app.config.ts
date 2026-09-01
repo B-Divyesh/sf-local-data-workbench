@@ -18,7 +18,7 @@ export default defineConfig({
   },
   define: {
     'import.meta.env.VITE_BUILD_ID': JSON.stringify(buildId()),
-    'import.meta.env.VITE_APP_VERSION': JSON.stringify(process.env.npm_package_version ?? '0.1.4')
+    'import.meta.env.VITE_APP_VERSION': JSON.stringify(process.env.npm_package_version ?? '0.1.5')
   },
   clearScreen: false,
   server: {

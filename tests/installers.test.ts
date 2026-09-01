@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -22,11 +22,14 @@ describe('installer verification', () => {
   it('@claim:release-manifest-integrity makes a complete SHA256SUMS check without a self-entry', async () => {
     const directory = await mkdtemp(join(tmpdir(), 'local-data-workbench-release-'));
     try {
-      await writeFile(join(directory, 'local-data-workbench_0.1.4_amd64.AppImage'), 'verified fixture\n');
-      execFileSync('sh', ['scripts/build-release-manifest.sh', directory, 'v0.1.4', 'candidate-commit', 'false', 'false'], { cwd: process.cwd(), stdio: 'pipe' });
+      const appImageDirectory = join(directory, 'appimage');
+      await mkdir(appImageDirectory);
+      await writeFile(join(appImageDirectory, 'local-data-workbench_0.1.5_amd64.AppImage'), 'verified fixture\n');
+      execFileSync('sh', ['scripts/build-release-manifest.sh', directory, 'v0.1.5', 'candidate-commit', 'false', 'false'], { cwd: process.cwd(), stdio: 'pipe' });
       const sums = await readFile(join(directory, 'SHA256SUMS'), 'utf8');
       const latest = JSON.parse(await readFile(join(directory, 'latest.json'), 'utf8')) as { commit: string; signing: { macos: boolean; windows: boolean }; platforms: Record<string, unknown> };
       expect(sums).not.toMatch(/SHA256SUMS|latest\.json/);
+      expect(sums).toContain('local-data-workbench_0.1.5_amd64.AppImage');
       expect(() => execFileSync('sha256sum', ['-c', 'SHA256SUMS'], { cwd: directory, stdio: 'pipe' })).not.toThrow();
       expect(latest).toMatchObject({ commit: 'candidate-commit', signing: { macos: false, windows: false } });
       expect(Object.keys(latest.platforms)).toEqual(['linux']);

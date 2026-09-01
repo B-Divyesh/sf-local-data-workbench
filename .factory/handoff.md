@@ -1,4 +1,4 @@
-# Repair handoff — Local Data Workbench 0.1.4
+# Repair handoff — Local Data Workbench 0.1.5
 
 ## What was repaired
 
@@ -20,9 +20,10 @@
   only publishes macOS/Windows artifacts after codesign/notarization/spctl or
   Authenticode/signtool verification succeeds. Its release notes record the
   signing verdict and the manifest records the candidate commit.
-- Added a manifest builder which creates `SHA256SUMS` from a temporary file;
-  neither `SHA256SUMS` nor `latest.json` can checksum itself. A test checks
-  `sha256sum -c SHA256SUMS` against a generated release fixture.
+- Added a manifest builder which first normalizes GitHub Actions' nested
+  `appimage`/`deb`/`rpm` artifact folders, then creates `SHA256SUMS` from a
+  temporary file; neither `SHA256SUMS` nor `latest.json` can checksum itself.
+  A nested-artifact regression fixture checks `sha256sum -c SHA256SUMS`.
 - Registered and tested the privacy, local-only, free-tier, signing-gate,
   release-provenance, installer-accessibility, and paid-withheld statements in
   `.factory/claims.json` (26 claims total). The privacy tests record all
@@ -67,7 +68,7 @@ and SEO. Playwright runs the Axe check on desktop and 390 px views.
 
 ## Release and deployment
 
-The repaired commit is tagged `v0.1.4` and pushed before its GitHub Actions
+The repaired commit is tagged `v0.1.5` and pushed before its GitHub Actions
 release is observed. The workflow must release from that exact tag/commit; its
 published `latest.json` exposes only the verified Linux asset until platform
 signing is available. After release completion, download `SHA256SUMS` and one

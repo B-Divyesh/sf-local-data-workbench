@@ -13,6 +13,17 @@ case "$macos_signed" in true|false) ;; *) echo 'macOS signing status must be tru
 case "$windows_signed" in true|false) ;; *) echo 'Windows signing status must be true or false.' >&2; exit 2 ;; esac
 
 cd "$asset_dir"
+## `actions/download-artifact` preserves bundle directories. Release assets
+## must be flat so their GitHub URL names match the checksummed filenames.
+find . -mindepth 2 -type f -print | while IFS= read -r asset; do
+  target="./$(basename "$asset")"
+  if [ -e "$target" ]; then
+    echo "Release asset name collision: $target" >&2
+    exit 2
+  fi
+  mv "$asset" "$target"
+done
+find . -mindepth 1 -depth -type d -empty -delete
 rm -f SHA256SUMS latest.json
 sum_tmp=$(mktemp)
 trap 'rm -f "$sum_tmp"' EXIT HUP INT TERM
