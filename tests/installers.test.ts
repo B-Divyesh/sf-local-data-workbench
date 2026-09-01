@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -20,24 +20,18 @@ describe('installer verification', () => {
     expect(powershell).toMatch(/unsigned/);
   });
 
-  it('@claim:release-manifest-integrity makes a complete SHA256SUMS check without a self-entry', async () => {
+  it('@claim:release-manifest-integrity @regression:flat-release-asset-names makes a complete SHA256SUMS check against the exact GitHub upload names', async () => {
     const directory = await mkdtemp(join(tmpdir(), 'local-data-workbench-release-'));
     try {
-      const appImageDirectory = join(directory, 'appimage');
-      const macArmDirectory = join(directory, 'mac-arm');
-      const macX64Directory = join(directory, 'mac-x64');
-      const windowsDirectory = join(directory, 'windows');
-      await mkdir(appImageDirectory);
-      await Promise.all([mkdir(macArmDirectory), mkdir(macX64Directory), mkdir(windowsDirectory)]);
-      await writeFile(join(appImageDirectory, 'Local Data Workbench_0.1.6_amd64.AppImage'), 'verified fixture\n');
-      await writeFile(join(macArmDirectory, 'Local Data Workbench_0.1.6_aarch64.dmg'), 'mac arm fixture\n');
-      await writeFile(join(macX64Directory, 'Local Data Workbench_0.1.6_x64.dmg'), 'mac x64 fixture\n');
-      await writeFile(join(windowsDirectory, 'Local Data Workbench_0.1.6_x64-setup.exe'), 'windows fixture\n');
+      await writeFile(join(directory, 'Local Data Workbench_0.1.6_amd64.AppImage'), 'verified fixture\n');
+      await writeFile(join(directory, 'Local Data Workbench_0.1.6_aarch64.dmg'), 'mac arm fixture\n');
+      await writeFile(join(directory, 'Local Data Workbench_0.1.6_x64.dmg'), 'mac x64 fixture\n');
+      await writeFile(join(directory, 'Local Data Workbench_0.1.6_x64-setup.exe'), 'windows fixture\n');
       execFileSync('sh', ['scripts/build-release-manifest.sh', directory, 'v0.1.6', 'candidate-commit', 'false', 'false'], { cwd: process.cwd(), stdio: 'pipe' });
       const sums = await readFile(join(directory, 'SHA256SUMS'), 'utf8');
       const latest = JSON.parse(await readFile(join(directory, 'latest.json'), 'utf8')) as { commit: string; signing: { macos: boolean; windows: boolean }; platforms: Record<string, { name: string; sha256: string; signed: boolean }> };
       expect(sums).not.toMatch(/SHA256SUMS|latest\.json/);
-      expect(sums).toContain('Local.Data.Workbench_0.1.6_amd64.AppImage');
+      expect(sums).toContain('Local.Data.Workbench_0.1.6_aarch64.dmg');
       expect((latest.platforms.linux as { name: string }).name).toBe('Local.Data.Workbench_0.1.6_amd64.AppImage');
       expect(() => execFileSync('sha256sum', ['-c', 'SHA256SUMS'], { cwd: directory, stdio: 'pipe' })).not.toThrow();
       expect(latest).toMatchObject({ commit: 'candidate-commit', signing: { macos: false, windows: false } });

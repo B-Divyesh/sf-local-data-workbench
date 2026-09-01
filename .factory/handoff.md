@@ -1,4 +1,4 @@
-# Repair handoff — Local Data Workbench 0.1.8
+# Repair handoff — Local Data Workbench 0.1.9
 
 ## What changed
 
@@ -10,7 +10,7 @@ uploading assets.
 
 The landing page now enables installers only when GitHub release metadata has:
 
-- the exact `v0.1.8` version and the exact page build commit in `Source commit`;
+- the exact `v0.1.9` version and the exact page build commit in `Source commit`;
 - a SHA-256 digest for every platform package, `latest.json`, and `SHA256SUMS`;
 - all Linux, macOS arm64/x64, and Windows package entries.
 
@@ -61,9 +61,12 @@ within budget: application JavaScript is 7.51 kB gzip, landing JavaScript is
 ## Release and deployment procedure
 
 `v0.1.7` is retained as an unsuccessful audit tag: its macOS jobs exposed that
-empty Apple signing variables still trigger Tauri's certificate import. This
-candidate removes those variables explicitly for unsigned builds and has a
-regression test for the condition. Tag `v0.1.8` at this handoff commit and
+empty Apple signing variables still trigger Tauri's certificate import.
+`v0.1.8` is retained as a metadata audit tag: GitHub normalized the macOS
+filenames from spaces to dots while its manifest still contained the old
+names. This candidate normalizes every downloaded release asset before it
+calculates `SHA256SUMS` or `latest.json`; a flat-artifact regression test
+reproduces that exact upload path. Tag `v0.1.9` at this handoff commit and
 push the commit and tag. The GitHub
 workflow builds the packages from the tagged commit, checks every published
 binary against `SHA256SUMS`, and writes the same commit to `latest.json` and

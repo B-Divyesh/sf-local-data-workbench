@@ -13,12 +13,10 @@ case "$macos_signed" in true|false) ;; *) echo 'macOS signing status must be tru
 case "$windows_signed" in true|false) ;; *) echo 'Windows signing status must be true or false.' >&2; exit 2 ;; esac
 
 cd "$asset_dir"
-## `actions/download-artifact` preserves bundle directories. Release assets
+## `actions/download-artifact` may preserve bundle directories. Release assets
 ## must be flat so their GitHub URL names match the checksummed filenames.
 find . -mindepth 2 -type f -print | while IFS= read -r asset; do
-  # GitHub release assets normalize spaces to dots. Match that public name in
-  # the checksum manifest and latest.json before upload.
-  target="./$(basename "$asset" | tr ' ' '.')"
+  target="./$(basename "$asset")"
   if [ -e "$target" ]; then
     echo "Release asset name collision: $target" >&2
     exit 2
@@ -26,6 +24,19 @@ find . -mindepth 2 -type f -print | while IFS= read -r asset; do
   mv "$asset" "$target"
 done
 find . -mindepth 1 -depth -type d -empty -delete
+# `actions/download-artifact` can already have flattened the files. GitHub
+# release uploads normalize spaces to dots, so normalize every flat bundle
+# name before calculating its checksum or publishing its URL.
+find . -maxdepth 1 -type f -print | while IFS= read -r asset; do
+  case "$asset" in ./SHA256SUMS|./latest.json) continue ;; esac
+  target="./$(basename "$asset" | tr ' ' '.')"
+  if [ "$asset" = "$target" ]; then continue; fi
+  if [ -e "$target" ]; then
+    echo "Release asset name collision: $target" >&2
+    exit 2
+  fi
+  mv "$asset" "$target"
+done
 rm -f SHA256SUMS latest.json
 sum_tmp=$(mktemp)
 trap 'rm -f "$sum_tmp"' EXIT HUP INT TERM
