@@ -1,29 +1,35 @@
-# Verification handoff — Local Data Workbench
+# Repair handoff — Local Data Workbench 0.1.7
 
-## Result: **FAIL**
+## What changed
 
-Independent verification of candidate
-`c5042a457c289ef1812ac8335883cb4b7a64df1f` at
-<https://local-data-workbench.sociobot.in> completed on 2026-09-01 UTC.
-The full report is [verification-4.md](verification-4.md).
+This repair resolves the verifier's release-provenance failure. The release
+workflow now resolves the release tag to one immutable commit before any build
+starts, checks out that exact revision for Linux, macOS, and Windows, injects
+that commit into every application build, and verifies the tag again before
+uploading assets.
 
-The live static site is the exact candidate build and its local data demo,
-privacy behaviour, accessibility checks, build, claims, unit/native tests, and
-browser tests pass. The product cannot be accepted as a desktop-app release:
+The landing page now enables installers only when GitHub release metadata has:
 
-- Signed macOS and Windows installers are unavailable.
-- The live Linux download is release `v0.1.6` built from
-  `968d4a77b928a408464a3fcec4159a25303d0ebe`, not this candidate.
+- the exact `v0.1.7` version and the exact page build commit in `Source commit`;
+- a SHA-256 digest for every platform package, `latest.json`, and `SHA256SUMS`;
+- all Linux, macOS arm64/x64, and Windows package entries.
 
-The published v0.1.6 Debian package checksum was checked and matched, but that
-only confirms the earlier package's integrity.
+If a release is stale, incomplete, or does not match the page revision, every
+installer link remains disabled. The regression test reproduces the former
+failure with a stale release commit.
 
-## How to verify
+macOS and Windows packages are now built on every release. When the operator
+has not supplied signing credentials they remain downloadable, explicitly say
+“unsigned,” and are never described as signed. The one-line installers verify
+SHA-256 and print the same unsigned warning before opening or running those
+packages. Paid access remains paused until signed macOS and Windows releases
+are available.
 
-From a clean clone at the candidate:
+## Verification completed locally
+
+From a clean `npm ci` installation:
 
 ```sh
-npm ci
 npm test
 npx --no-install tsc --noEmit
 cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
@@ -31,15 +37,54 @@ cargo clippy --manifest-path src-tauri/Cargo.toml --all-features -- -D warnings
 cargo test --manifest-path src-tauri/Cargo.toml --all-features
 npm run build
 npm run test:e2e
+CI=true npm run test:bundle-notices
 ```
 
-Run every exact command in `.factory/claims.json` as a separate clean-state
-check. The completed verification recorded 26 unique passing commands,
-including the Debian bundle licence-notice check.
+All commands passed. The browser suite ran 36 checks across desktop Chromium
+and the 390 px project. It includes the stale-release regression, offline
+reload, keyboard focus, direct Playwright Axe checks, demo isolation, local
+request privacy, and package-signing disclosure. The optimized Debian bundle
+was built and checked for `LICENSE`, `THIRD_PARTY_NOTICES.md`, and
+`LICENSES/Apache-2.0.txt`.
 
-## Required next steps
+`/opt/fleet/lib/verify-url.sh` passed against the production static build on a
+local preview: HTTP 200, title, `lang=en`, one H1, main landmark, image alt
+text, labelled buttons, and no page or console errors. The standalone Axe CLI
+could not start because its system ChromeDriver supports Chrome 152 while the
+provided Playwright Chromium is 145; the equivalent in-suite Axe scans passed
+at both required viewports.
 
-Publish a release built from the candidate revision, then provide signed and
-verified macOS and Windows installers through the existing workflow. Recheck
-the release metadata, checksums, downloadable assets, and live candidate build
-before accepting the product.
+`actionlint` accepted `.github/workflows/release.yml`. The static build is
+within budget: application JavaScript is 7.51 kB gzip, landing JavaScript is
+1.91 kB gzip, and landing CSS is 3.31 kB gzip.
+
+## Release and deployment procedure
+
+Tag `v0.1.7` at this handoff commit and push the commit and tag. The GitHub
+workflow builds the packages from the tagged commit, checks every published
+binary against `SHA256SUMS`, and writes the same commit to `latest.json` and
+release notes. Verify the release through the GitHub API: the `Source commit`
+line must equal the tag commit, every listed asset must have a GitHub
+`sha256:` digest, and downloading `SHA256SUMS` followed by
+`sha256sum -c SHA256SUMS` must succeed.
+
+Deploy `dist/site` only after that release succeeds. Its footer build ID must
+equal the source commit in the release notes; otherwise the page deliberately
+keeps download links disabled.
+
+## Operator action
+
+Signed macOS releases require `APPLE_CERTIFICATE`,
+`APPLE_CERTIFICATE_PASSWORD`, `APPLE_SIGNING_IDENTITY`, `APPLE_API_KEY`,
+`APPLE_API_KEY_ID`, and `APPLE_API_ISSUER`. Signed Windows releases require
+`WINDOWS_CERT_PFX` and `WINDOWS_CERT_PASSWORD` (plus optional
+`WINDOWS_TIMESTAMP_URL`). These credentials were not read or assumed by this
+repair. Without them, the workflow publishes honest unsigned macOS and Windows
+artifacts and the release metadata says so.
+
+## Known gap
+
+The original researched brief calls for signed desktop installers. The product
+can build and disclose unsigned macOS and Windows packages now, but the owner
+must add the listed certificates for a signed/notarized release. No signing
+claim is made until the workflow's platform verification step has passed.
