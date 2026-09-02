@@ -1,3 +1,18 @@
+# Verification 5 handoff — FAIL
+
+Candidate `d456abfd26315cc15e9c4bcb13c1638243d13557` passes all 26 declared
+claims, clean tests/builds/lints, native Debian bundle-notice inspection, and
+release checksum verification. Its independent verification is recorded in
+`.factory/verification-5.md`.
+
+The live footer is instead `0.1.9 · fbfd730b2b702242ba4012d94a237ba8d55e5604`.
+That stale deployment correctly withholds downloads because its build identity
+does not match the published `v0.1.9` candidate release. **Do not release this
+candidate: deploy its exact `dist/site` output with `VITE_BUILD_ID=d456…`, then
+verify the live footer and enabled release state.**
+
+---
+
 # Repair handoff — Local Data Workbench 0.1.9
 
 ## Released repair
