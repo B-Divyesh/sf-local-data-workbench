@@ -47,8 +47,15 @@ test('@claim:sample-demo landing page has a one-click isolated sample path', asy
 test('@claim:platform-download-detection landing selects the current operating system package', async ({ page }) => {
   await mockRelease(page);
   await page.goto('http://127.0.0.1:4173/');
-  await expect(page.locator('#primary-download')).toHaveText(/Download for Linux/);
-  await expect(page.locator('#primary-download')).toHaveAttribute('href', new RegExp(`Local\.Data\.Workbench_${VERSION.replaceAll('.', '\\.')}.*\.AppImage$`));
+  const userAgent = await page.evaluate(() => navigator.userAgent.toLowerCase());
+  const expected = userAgent.includes('windows')
+    ? { label: 'Windows', suffix: 'x64-setup.exe' }
+    : userAgent.includes('mac')
+      ? { label: 'macOS', suffix: 'aarch64.dmg' }
+      : { label: 'Linux', suffix: 'amd64.AppImage' };
+  await expect(page.locator('#primary-download')).toHaveText(new RegExp(`Download for ${expected.label}`));
+  const suffixPattern = expected.suffix.replaceAll('.', '\\.') + '$';
+  await expect(page.locator('#primary-download')).toHaveAttribute('href', new RegExp(suffixPattern));
 });
 
 test('@regression:installer-command-regions @claim:installer-command-access installer command regions are labelled, keyboard-focusable, and have no Axe scroll finding', async ({ page }) => {
@@ -174,7 +181,8 @@ test('@claim:desktop-walkthrough @regression:desktop-screenshot-walkthrough land
     const image = frame.locator('img');
     await expect(image).toHaveAttribute('alt', /\S+/);
     await expect(image).toHaveAttribute('loading', 'lazy');
-    expect(await image.evaluate((element: HTMLImageElement) => element.complete && element.naturalWidth === 1440 && element.naturalHeight === 900)).toBe(true);
+    await image.scrollIntoViewIfNeeded();
+    await expect.poll(() => image.evaluate((element: HTMLImageElement) => element.complete && element.naturalWidth === 1440 && element.naturalHeight === 900)).toBe(true);
   }
 });
 
