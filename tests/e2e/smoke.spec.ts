@@ -5,7 +5,7 @@ import { execFileSync } from 'node:child_process';
 
 const RELEASE_API = 'https://api.github.com/repos/B-Divyesh/sf-local-data-workbench/releases/latest';
 const CANDIDATE = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
-const VERSION = '0.1.10';
+const VERSION = '0.1.11';
 
 async function mockRelease(page: Page, body: object = {
   tag_name: `v${VERSION}`, body: `Source commit: ${CANDIDATE}\nmacOS signing: unsigned (operator certificate unavailable)\nWindows signing: unsigned (operator certificate unavailable)`, assets: [
@@ -124,6 +124,10 @@ test('@claim:touch-targets important mobile controls are at least 44 pixels tall
     }
   }
   await page.goto('http://127.0.0.1:1420/');
+  await page.locator('.skip-link').focus();
+  const appSkip = await page.locator('.skip-link').boundingBox();
+  expect(appSkip?.width).toBeGreaterThanOrEqual(44);
+  expect(appSkip?.height).toBeGreaterThanOrEqual(44);
   expect((await page.locator('#add-step').boundingBox())?.width).toBeGreaterThanOrEqual(44);
 });
 
@@ -170,7 +174,7 @@ test('@claim:local-only-demo demo sends no third-party requests', async ({ page 
   expect(requests.every((url) => new URL(url).origin === 'http://127.0.0.1:4173')).toBe(true);
 });
 
-test('@claim:offline-reload landing reloads from its cache offline', async ({ browser }) => {
+test('@claim:offline-reload @regression:offline-demo-cold-landing landing and sample demo open from a cold cache offline', async ({ browser }) => {
   const context = await browser.newContext();
   const page = await context.newPage();
   await mockRelease(page);
@@ -179,10 +183,15 @@ test('@claim:offline-reload landing reloads from its cache offline', async ({ br
   await page.goto('http://127.0.0.1:4173/');
   await page.evaluate(async () => { await navigator.serviceWorker.ready; });
   await page.reload();
-  expect(await page.evaluate(async () => caches.keys())).toEqual(['local-data-workbench-site-v3']);
+  expect(await page.evaluate(async () => caches.keys())).toEqual(['local-data-workbench-site-v4']);
   await context.setOffline(true);
   await page.reload();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(/Inspect local data files/);
+  await page.goto('http://127.0.0.1:4173/demo/');
+  await expect(page.locator('#sample-rows tr')).toHaveCount(5);
+  await page.locator('#status-filter').selectOption('shipped');
+  await page.getByRole('button', { name: 'Apply filter' }).click();
+  await expect(page.locator('#sample-rows tr')).toHaveCount(3);
   expect(errors.filter((message) => !message.includes('WebSocket') && !message.includes('[vite] failed to connect'))).toEqual([]);
   await context.close();
 });

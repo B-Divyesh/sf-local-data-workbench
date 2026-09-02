@@ -7,6 +7,7 @@ Use the one-click [sample demo](https://local-data-workbench.sociobot.in/demo/) 
 ## What it does
 
 - Opens local CSV, JSON, JSON Lines, and Parquet files.
+- Streams JSON arrays record by record without materialising the surrounding array, including files larger than 256 MiB.
 - Profiles columns and provides named filters, local joins, derived columns, renames, and selections.
 - Saves readable `.ldw.json` recipes with source fingerprints.
 - Exports the complete native source; the browser fallback labels its 100-row limit before export.

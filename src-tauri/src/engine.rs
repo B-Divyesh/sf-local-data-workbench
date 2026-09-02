@@ -1,9 +1,11 @@
 use parquet::file::reader::{FileReader, SerializedFileReader};
 use parquet::record::Field;
+use serde::de::{Deserializer, MapAccess, SeqAccess, Visitor};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 use sha2::{Digest, Sha256};
 use std::collections::{HashMap, HashSet};
+use std::fmt;
 use std::fs::{self, File};
 use std::io::{BufRead, BufReader, BufWriter, Read, Write};
 use std::path::{Path, PathBuf};
@@ -13,7 +15,6 @@ const PREVIEW_ROWS: usize = 100;
 const PROFILE_ROWS: usize = 100_000;
 const DISTINCT_LIMIT: usize = 10_000;
 const JOIN_ROW_LIMIT: usize = 200_000;
-const JSON_ARRAY_LIMIT: u64 = 256 * 1024 * 1024;
 
 #[derive(Debug, Clone, Serialize)]
 pub struct ColumnProfile {
@@ -330,22 +331,99 @@ fn json_value_string(value: Option<&Value>) -> String {
     }
 }
 
-fn read_json_array(path: &Path) -> Result<Vec<Map<String, Value>>, String> {
-    let size = fs::metadata(path)
-        .map_err(|error| format!("JSON metadata could not be read: {error}"))?
-        .len();
-    if size > JSON_ARRAY_LIMIT {
-        return Err("JSON arrays are limited to 256 MB to keep memory bounded. Convert this source to JSON Lines for streaming multi-gigabyte data.".to_owned());
+/// State shared by the streaming JSON visitor. JSON arrays can be several GB,
+/// so a record is intentionally the largest unit kept in memory here.
+#[derive(Default)]
+struct JsonStreamState {
+    row_count: u64,
+    stopped: bool,
+    callback_error: Option<String>,
+}
+
+struct JsonRecordVisitor<'state, 'callback, F> {
+    state: &'state mut JsonStreamState,
+    callback: &'callback mut F,
+}
+
+impl<F> JsonRecordVisitor<'_, '_, F>
+where
+    F: FnMut(Map<String, Value>) -> Result<bool, String>,
+{
+    fn observe(&mut self, object: Map<String, Value>) {
+        self.state.row_count += 1;
+        if self.state.stopped {
+            return;
+        }
+        match (self.callback)(object) {
+            Ok(keep_going) => self.state.stopped = !keep_going,
+            Err(error) => {
+                self.state.callback_error = Some(error);
+                self.state.stopped = true;
+            }
+        }
     }
-    let value: Value = serde_json::from_reader(BufReader::new(
-        File::open(path).map_err(|error| format!("JSON could not be opened: {error}"))?,
-    ))
-    .map_err(|error| format!("JSON is invalid: {error}"))?;
-    match value {
-        Value::Array(values) => values.into_iter().map(json_object).collect(),
-        Value::Object(object) => Ok(vec![object]),
-        _ => Err("JSON must contain an object or an array of objects.".to_owned()),
+}
+
+impl<'de, F> Visitor<'de> for JsonRecordVisitor<'_, '_, F>
+where
+    F: FnMut(Map<String, Value>) -> Result<bool, String>,
+{
+    type Value = ();
+
+    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str("a JSON object or an array of JSON objects")
     }
+
+    fn visit_seq<A>(mut self, mut sequence: A) -> Result<Self::Value, A::Error>
+    where
+        A: SeqAccess<'de>,
+    {
+        while let Some(object) = sequence.next_element::<Map<String, Value>>()? {
+            self.observe(object);
+        }
+        Ok(())
+    }
+
+    fn visit_map<A>(mut self, mut map: A) -> Result<Self::Value, A::Error>
+    where
+        A: MapAccess<'de>,
+    {
+        let mut object = Map::new();
+        while let Some((key, value)) = map.next_entry::<String, Value>()? {
+            object.insert(key, value);
+        }
+        self.observe(object);
+        Ok(())
+    }
+}
+
+/// Visit a JSON object, or every object in a JSON array, without ever
+/// materialising the surrounding array. This deliberately consumes a complete
+/// document even if the caller has enough preview rows, so malformed tails are
+/// still reported rather than silently producing a partial result.
+fn stream_json_objects<F>(path: &Path, mut callback: F) -> Result<u64, String>
+where
+    F: FnMut(Map<String, Value>) -> Result<bool, String>,
+{
+    let file = File::open(path).map_err(|error| format!("JSON could not be opened: {error}"))?;
+    let mut deserializer = serde_json::Deserializer::from_reader(BufReader::new(file));
+    let mut state = JsonStreamState::default();
+    {
+        let visitor = JsonRecordVisitor {
+            state: &mut state,
+            callback: &mut callback,
+        };
+        deserializer
+            .deserialize_any(visitor)
+            .map_err(|error| format!("JSON is invalid: {error}"))?;
+    }
+    deserializer
+        .end()
+        .map_err(|error| format!("JSON is invalid: {error}"))?;
+    if let Some(error) = state.callback_error {
+        return Err(error);
+    }
+    Ok(state.row_count)
 }
 
 fn json_headers(path: &Path, lines: bool) -> Result<Vec<String>, String> {
@@ -376,9 +454,10 @@ fn json_headers(path: &Path, lines: bool) -> Result<Vec<String>, String> {
             observe(&object);
         }
     } else {
-        for object in &read_json_array(path)? {
-            observe(object);
-        }
+        stream_json_objects(path, |object| {
+            observe(&object);
+            Ok(true)
+        })?;
     }
     if headers.is_empty() {
         return Err("No object fields were found in this JSON source.".to_owned());
@@ -515,17 +594,14 @@ where
             }
         }
         "json" => {
-            for object in read_json_array(path)? {
-                count += 1;
-                if !callback(
+            count = stream_json_objects(path, |object| {
+                callback(
                     headers
                         .iter()
                         .map(|header| json_value_string(object.get(header)))
                         .collect(),
-                )? {
-                    break;
-                }
-            }
+                )
+            })?;
         }
         "parquet" => {
             let reader = parquet_reader(path)?;
@@ -1016,6 +1092,30 @@ mod tests {
             assert!(summary.row_count > 0);
             assert_eq!(summary.headers.len(), summary.profiles.len());
         }
+    }
+
+    // @claim:large-json-arrays @regression:json-array-over-256-mib
+    #[test]
+    fn claim_large_json_arrays_stream_past_the_previous_256_mib_guard() {
+        let dir = tempdir().unwrap();
+        let path = dir.path().join("over-256-mib.json");
+        let mut writer = BufWriter::new(File::create(&path).unwrap());
+        writer.write_all(br#"[{"id":1,"status":"first"},"#).unwrap();
+        let whitespace = vec![b' '; 1024 * 1024];
+        // The old engine rejected any JSON array once its file metadata was
+        // above 256 MiB. Whitespace keeps this fixture valid without creating
+        // a huge array of records, so the test exercises the exact boundary.
+        for _ in 0..256 {
+            writer.write_all(&whitespace).unwrap();
+        }
+        writer.write_all(br#"{"id":2,"status":"last"}]"#).unwrap();
+        writer.flush().unwrap();
+        assert!(fs::metadata(&path).unwrap().len() > 256 * 1024 * 1024);
+
+        let summary = analyze_file(path.to_str().unwrap()).unwrap();
+        assert_eq!(summary.row_count, 2);
+        assert_eq!(summary.headers, vec!["id", "status"]);
+        assert_eq!(summary.rows, vec![vec!["1", "first"], vec!["2", "last"]]);
     }
 
     // @claim:numeric-profile-bounds

@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite';
 import { execFileSync } from 'node:child_process';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 function buildId(): string {
@@ -32,8 +32,31 @@ function stampInstallers(commit: string, version: string) {
   };
 }
 
+function stampServiceWorker() {
+  return {
+    name: 'stamp-service-worker',
+    closeBundle(): void {
+      const root = outputDir();
+      const assets = readdirSync(resolve(root, 'assets'), { recursive: true })
+        .filter((entry): entry is string => typeof entry === 'string' && /\.(?:js|css)$/.test(entry))
+        .map((entry) => `/assets/${entry.replaceAll('\\', '/')}`)
+        .sort();
+      const path = resolve(root, 'sw.js');
+      const source = readFileSync(path, 'utf8');
+      const stamped = source.replace(
+        "const PRECACHE_ASSETS = ['/main.ts', '/demo.ts', '/site.css'];",
+        `const PRECACHE_ASSETS = ${JSON.stringify(assets)};`
+      );
+      if (stamped === source || stamped.includes("'/demo.ts'")) {
+        throw new Error('Could not stamp every production service-worker asset.');
+      }
+      writeFileSync(path, stamped);
+    }
+  };
+}
+
 const commit = buildId();
-const version = process.env.npm_package_version ?? '0.1.10';
+const version = process.env.npm_package_version ?? '0.1.11';
 
 export default defineConfig({
   root: 'site',
@@ -53,7 +76,7 @@ export default defineConfig({
       }
     }
   },
-  plugins: [stampInstallers(commit, version)],
+  plugins: [stampInstallers(commit, version), stampServiceWorker()],
   define: {
     'import.meta.env.VITE_BUILD_ID': JSON.stringify(commit),
     'import.meta.env.VITE_APP_VERSION': JSON.stringify(version)

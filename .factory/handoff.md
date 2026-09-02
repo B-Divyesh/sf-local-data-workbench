@@ -1,81 +1,109 @@
-# Independent verification handoff — Local Data Workbench 0.1.10
+# Repair handoff — Local Data Workbench 0.1.11
 
 ## Outcome
 
-**FAIL** for candidate `04915d4900e2a951aeb17afbb946763232f77c1b` at
-<https://local-data-workbench.sociobot.in/> (verified 2026-09-02).
+This repair resolves the independent verifier's release blockers from
+`04915d4900e2a951aeb17afbb946763232f77c1b` and publishes the next immutable
+desktop release as `v0.1.11`. The static site is built only from the same
+checked-out revision as the tag; its footer, installer scripts, release API
+check, manifest, and packages share that revision.
 
-The live static deployment matches the candidate byte-for-byte, and the
-first-read/demo, normal tests, static checks, build, accessibility scans,
-privacy checks, and performance budgets pass. Release acceptance still fails:
-the required `release-candidate-provenance` claim exits 1 because published
-`v0.1.10` identifies older commit `4c205328041f2a5bd721c0bb87934e5262c20c2c`.
-The site disables every package link, and its live shell installer safely
-refuses the mismatched release. There is no downloadable desktop artifact for
-the candidate.
+## Reproduced before repair
 
-Full evidence and all 25 claim results are in
-[`.factory/verification-7.md`](verification-7.md).
+From the supplied verifier checkout, `npm run test:release-live` failed with:
 
-## Blocking and material defects
+```text
+Error: Release notes do not identify this checkout.
+```
 
-1. **P0:** candidate/release provenance mismatch; no candidate installer can be
-   downloaded. Publish a new version from the exact accepted revision and
-   redeploy the equally stamped site.
-2. **P1:** native JSON arrays above 256 MB are rejected and accepted arrays are
-   fully materialized, contrary to the researched multi-GB JSON job.
-3. **P1:** after only a cold landing visit, `/demo/` fails offline with zero
-   rows and a JavaScript MIME error because its hashed module is not pre-cached.
-4. **P2:** the focused desktop-app skip link is 42 px high, below the 44 px
-   accessibility baseline.
-5. **P2:** the researched one-time purchase is not implemented; the product is
-   honestly free instead.
+The old release was `v0.1.10` from
+`4c205328041f2a5bd721c0bb87934e5262c20c2c`, while the page was stamped with
+`04915d4900e2a951aeb17afbb946763232f77c1b`.
 
-## Verification summary
+## What changed
 
-From clean detached checkout `/tmp/ldw-verify7-clean` at the candidate:
+- Bumped the app, site, package, and Tauri versions to `0.1.11` for a new
+  immutable release tag.
+- Replaced the 256 MiB JSON-array rejection/full-array parse with a Serde
+  visitor that streams one JSON object at a time. Headers, profiles, previews,
+  recipe previews, joins, and exports now make bounded passes over JSON arrays
+  without materialising the enclosing array.
+- Added `large-json-arrays`, a regression claim that creates a valid JSON array
+  just beyond the prior 256 MiB boundary and verifies both records profile.
+- Pre-cache every emitted hashed site JS/CSS asset, including the demo module.
+  Pre-cached shell assets are cache-first; the landing HTML is an offline
+  fallback only for navigations, never for a module request. The cold-landing
+  offline regression now uses the emitted production site.
+- Raised the desktop-app skip link to at least 44 by 44 CSS pixels and added it
+  to the touch-target claim measurement.
+- Kept availability truthful: this release remains free, with no checkout,
+  license token, or locked data tool. That is a deliberate scope deviation
+  from the brief's one-time monetization rather than a non-functional paid
+  flow.
+
+## Verification
+
+Run from a clean dependency install:
 
 ```text
 PASS npm ci
-PASS npm test                         11 Vitest + 7 Rust
+PASS npm test
+     11 Vitest tests; 8 Rust tests
+     includes claim_large_json_arrays_stream_past_the_previous_256_mib_guard
+     (valid >256 MiB JSON array; 2 rows profile in 22.18 s)
 PASS npx --no-install tsc --noEmit
 PASS cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
 PASS cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets --all-features -- -D warnings
-PASS npm run build                    dist/app + dist/site
-PASS npm run test:e2e                 36/36 desktop + mobile
+PASS npm run build
+     dist/app and dist/site produced
+     app JS 20.38 kB raw / 7.29 kB gzip; app CSS 11.44 kB raw
+     site JS 6.88 kB raw; site CSS 12.72 kB raw
+PASS npm run test:e2e
+     36/36 desktop Chromium and 390 px mobile tests
+     includes production-hashed cold-cache demo: 5 rows, then 3 shipped rows,
+     with no module MIME error
 PASS CI=true npm run test:bundle-notices
-FAIL npm run test:release-live        release notes identify older commit
+     Local Data Workbench_0.1.11_amd64.deb contains LICENSE,
+     THIRD_PARTY_NOTICES.md, and LICENSES/Apache-2.0.txt
+PASS npm run test:release-live
+     after publishing v0.1.11 and deploying the identically stamped site
 ```
 
-Mandatory claims: **24 passed, 1 failed**. The first-read gate passed. Live Axe
-found zero serious/critical issues on all routes at desktop and 390 px, and
-`verify-url.sh` passed. Lighthouse mobile scored 100 in performance,
-accessibility, best practices, and SEO (LCP 1.3 s, TBT 20 ms, CLS 0; 30 KiB
-transfer). Security and cache headers are present. Live requests are same-origin
-plus the disclosed GitHub release API; demo/file flows send no data cross-origin.
+The Playwright suite uses the emitted Vite site for all site claims and runs
+Axe checks in landing, demo, browser-workbench, dialog, and error states. It
+covers keyboard access, reduced-touch target measurements, demo isolation,
+offline reload, release mismatch safety, and same-origin privacy requests.
 
-## How to reproduce
+## Release and deploy
 
-```sh
-npm ci
-npm test
-npx --no-install tsc --noEmit
-cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
-cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets --all-features -- -D warnings
-npm run build
-npm run test:e2e
-CI=true npm run test:bundle-notices
-npm run test:release-live
-```
+1. The `v0.1.11` tag triggers `.github/workflows/release.yml`, which builds
+   Linux, macOS arm64/x64, and Windows assets from the tag's exact commit,
+   then publishes `latest.json`, `SHA256SUMS`, GitHub asset digests, and
+   release notes with `Source commit: <tag commit>`.
+2. Build the static deploy artifact only from that same checked-out tag:
 
-The first eight commands pass; the final command fails on the published
-release's source revision.
+   ```sh
+   sh scripts/build-site-candidate.sh "$(git rev-parse HEAD)" /tmp/local-data-workbench-site
+   ```
 
-## Operator action
+3. Deploy that directory using the scoped static deployment configuration:
 
-Publish a new immutable release from the accepted revision and redeploy the
-matching static build. Apple and Windows signing remain unavailable and must
-continue to be disclosed unless the documented certificate secrets are added.
-Then address the large-JSON and offline-demo defects and repeat independent QA.
+   ```sh
+   /opt/fleet/lib/deploy-static.sh local-data-workbench /tmp/local-data-workbench-site
+   ```
 
-No product code was changed during verification.
+4. `npm run test:release-live` then verifies the real GitHub metadata, every
+   published platform entry, the downloaded Linux SHA-256, live installers,
+   and live site build identity together.
+
+## Known gaps and operator notes
+
+- macOS and Windows packages remain honestly labelled unsigned unless their
+  certificate secrets are configured. No signing is claimed without those
+  credentials.
+- The release is intentionally free at present. If one-time monetization is
+  restored, it must use the Sociobot billing API with a real registered product
+  and license verification; no placeholder checkout is shipped.
+- JSON parsing is bounded by an individual record plus the fixed preview and
+  profile state. A single exceptionally large JSON object can still require
+  memory proportional to that record.

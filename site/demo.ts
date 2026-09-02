@@ -6,7 +6,7 @@ const orders: Order[] = [
   ['1003', 'North', 'shipped', '241.25'], ['1004', 'South', 'cancelled', '61.00'], ['1005', 'West', 'shipped', '199.99']
 ];
 const BUILD_ID = import.meta.env.VITE_BUILD_ID ?? 'source checkout';
-const APP_VERSION = import.meta.env.VITE_APP_VERSION ?? '0.1.10';
+const APP_VERSION = import.meta.env.VITE_APP_VERSION ?? '0.1.11';
 const $ = <T extends Element>(selector: string): T => {
   const element = document.querySelector<T>(selector);
   if (!element) throw new Error(`Missing ${selector}`);

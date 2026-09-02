@@ -21,10 +21,17 @@ describe('static deployment identity', () => {
       const bundles = await Promise.all(assetFiles.filter((name) => name.endsWith('.js')).map((name) => readFile(join(outputDirectory, 'assets', name), 'utf8')));
       expect(bundles.some((bundle) => bundle.includes(currentCommit))).toBe(true);
       await expect(readFile(join(outputDirectory, 'index.html'), 'utf8')).resolves.toContain('/assets/');
+      const demoHtml = await readFile(join(outputDirectory, 'demo', 'index.html'), 'utf8');
+      const demoModule = demoHtml.match(/src="(\/assets\/[^\"]+\.js)"/)?.[1];
+      const serviceWorker = await readFile(join(outputDirectory, 'sw.js'), 'utf8');
+      expect(demoModule).toBeDefined();
+      expect(serviceWorker).toContain(demoModule!);
+      expect(serviceWorker).toContain('if (SHELL.includes(url.pathname))');
+      expect(serviceWorker).toContain("if (event.request.mode === 'navigate')");
       for (const installer of ['install.sh', 'install.ps1']) {
         const contents = await readFile(join(outputDirectory, installer), 'utf8');
         expect(contents).toContain(currentCommit);
-        expect(contents).toContain('v0.1.10');
+        expect(contents).toContain('v0.1.11');
         expect(contents).not.toContain('__LDW_');
         expect(contents).not.toContain('/releases/latest/download');
       }
