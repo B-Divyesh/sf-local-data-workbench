@@ -182,49 +182,6 @@
       "src_tauri_gen_schemas_linux_schema_json_ref_permissions"
     ],
     "3": [
-      "axe_core_playwright",
-      "package",
-      "package_dependencies",
-      "package_dependencies_tauri_apps_api",
-      "package_dependencies_tauri_apps_plugin_dialog",
-      "package_dependencies_tauri_apps_plugin_opener",
-      "package_devdependencies",
-      "package_devdependencies_axe_core_playwright",
-      "package_devdependencies_playwright_test",
-      "package_devdependencies_tauri_apps_cli",
-      "package_devdependencies_types_node",
-      "package_devdependencies_typescript",
-      "package_devdependencies_vite",
-      "package_devdependencies_vitest",
-      "package_name",
-      "package_overrides",
-      "package_overrides_playwright_core",
-      "package_private",
-      "package_scripts",
-      "package_scripts_build",
-      "package_scripts_build_app",
-      "package_scripts_build_site",
-      "package_scripts_dev",
-      "package_scripts_dev_site",
-      "package_scripts_tauri",
-      "package_scripts_test",
-      "package_scripts_test_bundle_notices",
-      "package_scripts_test_e2e",
-      "package_scripts_test_rust",
-      "package_scripts_test_unit",
-      "package_type",
-      "package_version",
-      "playwright_test",
-      "tauri_apps_api",
-      "tauri_apps_cli",
-      "tauri_apps_plugin_dialog",
-      "tauri_apps_plugin_opener",
-      "types_node",
-      "typescript",
-      "vite",
-      "vitest"
-    ],
-    "4": [
       "src_tauri_gen_schemas_linux_schema_capability_properties",
       "src_tauri_gen_schemas_linux_schema_definitions_identifier",
       "src_tauri_gen_schemas_linux_schema_description_default",
@@ -265,7 +222,7 @@
       "src_tauri_gen_schemas_linux_schema_windows_items",
       "src_tauri_gen_schemas_linux_schema_windows_type"
     ],
-    "5": [
+    "4": [
       "ref_icons_128x128_2x_png",
       "ref_icons_128x128_png",
       "ref_icons_32x32_png",
@@ -299,7 +256,7 @@
       "src_tauri_tauri_conf_security_csp",
       "src_tauri_tauri_conf_version"
     ],
-    "6": [
+    "5": [
       "src_tauri_gen_schemas_desktop_schema",
       "src_tauri_gen_schemas_desktop_schema_anyof",
       "src_tauri_gen_schemas_desktop_schema_application_anyof",
@@ -331,7 +288,7 @@
       "src_tauri_gen_schemas_desktop_schema_value_anyof",
       "src_tauri_gen_schemas_desktop_schema_value_description"
     ],
-    "7": [
+    "6": [
       "src_tauri_gen_schemas_linux_schema",
       "src_tauri_gen_schemas_linux_schema_anyof",
       "src_tauri_gen_schemas_linux_schema_application_anyof",
@@ -362,6 +319,34 @@
       "src_tauri_gen_schemas_linux_schema_urls_type",
       "src_tauri_gen_schemas_linux_schema_value_anyof",
       "src_tauri_gen_schemas_linux_schema_value_description"
+    ],
+    "7": [
+      "package",
+      "package_dependencies",
+      "package_dependencies_tauri_apps_api",
+      "package_dependencies_tauri_apps_plugin_dialog",
+      "package_dependencies_tauri_apps_plugin_opener",
+      "package_name",
+      "package_overrides",
+      "package_overrides_playwright_core",
+      "package_private",
+      "package_scripts",
+      "package_scripts_build",
+      "package_scripts_build_app",
+      "package_scripts_build_site",
+      "package_scripts_dev",
+      "package_scripts_dev_site",
+      "package_scripts_tauri",
+      "package_scripts_test",
+      "package_scripts_test_bundle_notices",
+      "package_scripts_test_e2e",
+      "package_scripts_test_rust",
+      "package_scripts_test_unit",
+      "package_type",
+      "package_version",
+      "tauri_apps_api",
+      "tauri_apps_plugin_dialog",
+      "tauri_apps_plugin_opener"
     ],
     "8": [
       "ref_config_ts",
@@ -404,6 +389,23 @@
       "site_main_sourcecommit"
     ],
     "10": [
+      "axe_core_playwright",
+      "package_devdependencies",
+      "package_devdependencies_axe_core_playwright",
+      "package_devdependencies_playwright_test",
+      "package_devdependencies_tauri_apps_cli",
+      "package_devdependencies_types_node",
+      "package_devdependencies_typescript",
+      "package_devdependencies_vite",
+      "package_devdependencies_vitest",
+      "playwright_test",
+      "tauri_apps_cli",
+      "types_node",
+      "typescript",
+      "vite",
+      "vitest"
+    ],
+    "11": [
       "apphandle",
       "src_tauri_src_lib",
       "src_tauri_src_lib_analyze_file",
@@ -417,7 +419,7 @@
       "src_tauri_src_lib_sample_dataset",
       "src_tauri_src_lib_write_text_file"
     ],
-    "11": [
+    "12": [
       "ref_core_default",
       "ref_dialog_default",
       "ref_main",
@@ -429,7 +431,7 @@
       "src_tauri_capabilities_default_schema",
       "src_tauri_capabilities_default_windows"
     ],
-    "12": [
+    "13": [
       "site_demo",
       "site_demo_csvcell",
       "site_demo_exportsample",
@@ -439,94 +441,104 @@
       "site_demo_render",
       "site_demo_visible"
     ],
-    "13": [
+    "14": [
       "factory_verification_artifacts_qa",
       "factory_verification_artifacts_qa_inspectroute",
       "factory_verification_artifacts_qa_result"
     ],
-    "14": [
+    "15": [
       "scripts_build_release_manifest",
       "scripts_build_release_manifest_asset_json",
       "scripts_build_release_manifest_sh__entry"
     ],
-    "15": [
+    "16": [
       "tests_e2e_smoke_spec",
       "tests_e2e_smoke_spec_candidate",
       "tests_e2e_smoke_spec_mockrelease"
     ],
-    "16": [
+    "17": [
+      "tests_site_deployment_test",
+      "tests_site_deployment_test_currentcommit",
+      "tests_site_deployment_test_differentcommit"
+    ],
+    "18": [
+      "vite_site_config",
+      "vite_site_config_buildid",
+      "vite_site_config_outputdir"
+    ],
+    "19": [
       "factory_verification_artifacts_native_probe",
       "factory_verification_artifacts_native_probe_main"
     ],
-    "17": [
+    "20": [
       "public_install_sh__entry",
       "public_install_sh_public_install"
     ],
-    "18": [
+    "21": [
       "public_sw",
       "public_sw_shell"
     ],
-    "19": [
+    "22": [
+      "scripts_build_site_candidate",
+      "scripts_build_site_candidate_sh__entry"
+    ],
+    "23": [
       "scripts_check_bundle_notices",
       "scripts_check_bundle_notices_sh__entry"
     ],
-    "20": [
+    "24": [
       "scripts_ensure_tauri_linux_deps",
       "scripts_ensure_tauri_linux_deps_sh__entry"
     ],
-    "21": [
+    "25": [
       "src_tauri_build",
       "src_tauri_build_main"
     ],
-    "22": [
+    "26": [
       "src_tauri_src_main",
       "src_tauri_src_main_main"
     ],
-    "23": [
+    "27": [
       "vite_app_config",
       "vite_app_config_buildid"
     ],
-    "24": [
-      "vite_site_config",
-      "vite_site_config_buildid"
-    ],
-    "25": [
+    "28": [
       "datasetsummary"
     ],
-    "26": [
+    "29": [
       "exportrequest"
     ],
-    "27": [
+    "30": [
       "exportresult"
     ],
-    "28": [
+    "31": [
       "pkg_local_data_workbench"
     ],
-    "29": [
+    "32": [
       "playwright_config"
     ],
-    "30": [
+    "33": [
       "public_install_ps1_public_install"
     ],
-    "31": [
+    "34": [
       "recipestep"
     ],
-    "32": [
+    "35": [
       "src_tauri_src_engine_rs_result"
     ],
-    "33": [
+    "36": [
       "src_tauri_src_engine_rs_string"
     ],
-    "34": [
+    "37": [
       "src_tauri_src_engine_rs_vec"
     ],
-    "35": [
+    "38": [
       "tabledata"
     ],
-    "36": [
+    "39": [
       "tests_installers_test"
     ],
-    "37": [
+    "40": [
       "vitest_config"
     ]
   },
@@ -534,22 +546,22 @@
     "0": 0.10863095238095238,
     "1": 0.08619777895293496,
     "2": 0.04336734693877551,
-    "3": 0.04878048780487805,
-    "4": 0.05398110661268556,
-    "5": 0.0625,
+    "3": 0.05398110661268556,
+    "4": 0.0625,
+    "5": 0.06666666666666667,
     "6": 0.06666666666666667,
-    "7": 0.06666666666666667,
+    "7": 0.07692307692307693,
     "8": 0.1,
     "9": 0.21666666666666667,
-    "10": 0.3333333333333333,
-    "11": 0.2,
-    "12": 0.32142857142857145,
-    "13": 0.6666666666666666,
+    "10": 0.13333333333333333,
+    "11": 0.3333333333333333,
+    "12": 0.2,
+    "13": 0.32142857142857145,
     "14": 0.6666666666666666,
     "15": 0.6666666666666666,
-    "16": 1.0,
-    "17": 1.0,
-    "18": 1.0,
+    "16": 0.6666666666666666,
+    "17": 0.6666666666666666,
+    "18": 0.6666666666666666,
     "19": 1.0,
     "20": 1.0,
     "21": 1.0,
@@ -568,7 +580,10 @@
     "34": 1.0,
     "35": 1.0,
     "36": 1.0,
-    "37": 1.0
+    "37": 1.0,
+    "38": 1.0,
+    "39": 1.0,
+    "40": 1.0
   },
   "gods": [
     {
