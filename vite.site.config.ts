@@ -56,7 +56,7 @@ function stampServiceWorker() {
 }
 
 const commit = buildId();
-const version = process.env.npm_package_version ?? '0.1.11';
+const version = process.env.npm_package_version ?? '0.1.12';
 
 export default defineConfig({
   root: 'site',

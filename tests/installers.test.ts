@@ -73,6 +73,10 @@ describe('installer verification', () => {
     expect(workflow).toContain('Resolve the immutable release candidate');
     expect(workflow).toContain('VITE_BUILD_ID: ${{ needs.resolve-candidate.outputs.source_commit }}');
     expect(workflow).toContain('Source commit: $SOURCE_COMMIT');
+    expect(workflow).toContain('test "$source_commit" = "$(git rev-parse origin/main)"');
+    expect(workflow).toContain('test "$RELEASE_TAG" = "v$package_version"');
+    expect(workflow).toContain('test "$package_version" = "$tauri_version"');
+    expect(workflow).toContain('test "$package_version" = "$cargo_version"');
     expect(workflow).toContain('test "$tag_commit" = "$SOURCE_COMMIT"');
     expect(workflow).toContain('SHA256SUMS and latest.json describe every published asset');
     expect(workflow).toContain('needs.build-macos.result == \'success\'');

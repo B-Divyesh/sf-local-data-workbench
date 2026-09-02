@@ -5,7 +5,7 @@ import { execFileSync } from 'node:child_process';
 
 const RELEASE_API = 'https://api.github.com/repos/B-Divyesh/sf-local-data-workbench/releases/latest';
 const CANDIDATE = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
-const VERSION = '0.1.11';
+const VERSION = '0.1.12';
 
 async function mockRelease(page: Page, body: object = {
   tag_name: `v${VERSION}`, body: `Source commit: ${CANDIDATE}\nmacOS signing: unsigned (operator certificate unavailable)\nWindows signing: unsigned (operator certificate unavailable)`, assets: [

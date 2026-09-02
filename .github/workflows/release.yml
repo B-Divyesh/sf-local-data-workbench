@@ -33,8 +33,19 @@ jobs:
           set -eu
           case "$RELEASE_TAG" in v[0-9]*) ;; *) echo 'Release tag must start with v and a version number.' >&2; exit 2 ;; esac
           git fetch --force origin "refs/tags/$RELEASE_TAG:refs/tags/$RELEASE_TAG"
+          git fetch origin main
           source_commit="$(git rev-list -n 1 "refs/tags/$RELEASE_TAG")"
           test -n "$source_commit"
+          test "$source_commit" = "$(git rev-parse origin/main)" || {
+            echo 'Release tag must point at the current main commit.' >&2
+            exit 2
+          }
+          package_version="$(git show "$source_commit:package.json" | jq -r .version)"
+          tauri_version="$(git show "$source_commit:src-tauri/tauri.conf.json" | jq -r .version)"
+          cargo_version="$(git show "$source_commit:src-tauri/Cargo.toml" | sed -n 's/^version = "\([^"]*\)"$/\1/p' | head -n1)"
+          test "$RELEASE_TAG" = "v$package_version" || { echo 'Tag and package.json version differ.' >&2; exit 2; }
+          test "$package_version" = "$tauri_version" || { echo 'package.json and Tauri versions differ.' >&2; exit 2; }
+          test "$package_version" = "$cargo_version" || { echo 'package.json and Cargo versions differ.' >&2; exit 2; }
           echo "source_commit=$source_commit" >> "$GITHUB_OUTPUT"
 
   signing-readiness:

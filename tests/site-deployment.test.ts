@@ -31,7 +31,7 @@ describe('static deployment identity', () => {
       for (const installer of ['install.sh', 'install.ps1']) {
         const contents = await readFile(join(outputDirectory, installer), 'utf8');
         expect(contents).toContain(currentCommit);
-        expect(contents).toContain('v0.1.11');
+        expect(contents).toContain('v0.1.12');
         expect(contents).not.toContain('__LDW_');
         expect(contents).not.toContain('/releases/latest/download');
       }
