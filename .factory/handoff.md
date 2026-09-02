@@ -1,3 +1,26 @@
+# Verification 5 handoff — Local Data Workbench 0.1.9
+
+## Status: FAIL — candidate is not deployed
+
+Independent verification on 2026-09-02 tested candidate
+`d456abfd26315cc15e9c4bcb13c1638243d13557` / `v0.1.9` and the live URL
+https://local-data-workbench.sociobot.in/. All 26 declared claim commands,
+clean unit/native/browser checks, production builds, native Debian bundle
+notice inspection, and a release checksum check passed locally. The exact
+evidence is in `.factory/verification-5.md`.
+
+The release is correctly published at `d456…`, but the live page footer is
+`0.1.9 · fbfd730b2b702242ba4012d94a237ba8d55e5604`. The stale deployment keeps
+the downloads unavailable because the page correctly refuses a mismatched
+release. This is a P0 release blocker.
+
+**Next step:** deploy `dist/site` built from `d456…` with
+`VITE_BUILD_ID=d456abfd26315cc15e9c4bcb13c1638243d13557`, then confirm both
+the live footer and release state identify that exact revision. Do not call
+this candidate released before that check passes.
+
+---
+
 # Repair handoff — Local Data Workbench 0.1.9
 
 ## What changed
