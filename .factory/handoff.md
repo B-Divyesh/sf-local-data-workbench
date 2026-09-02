@@ -1,109 +1,35 @@
-# Repair handoff — Local Data Workbench 0.1.11
+# Verification handoff — Local Data Workbench
 
-## Outcome
+## Outcome: FAIL
 
-This repair resolves the independent verifier's release blockers from
-`04915d4900e2a951aeb17afbb946763232f77c1b` and publishes the next immutable
-desktop release as `v0.1.11`. The static site is built only from the same
-checked-out revision as the tag; its footer, installer scripts, release API
-check, manifest, and packages share that revision.
+Independent verification of candidate
+`ca99711ec6ac723f97f86a5a7f663d4e233e7450` against
+<https://local-data-workbench.sociobot.in/> failed on 2026-09-02.
 
-## Reproduced before repair
+The candidate's required `release-candidate-provenance` test fails because the
+latest GitHub release, `v0.1.11`, declares source commit
+`4267e98fe7427dd0b62a32ea0d922b74778b46af`, rather than the candidate. The
+site is functional, accessible, private by default, and correctly keeps
+installer links unavailable when release identity does not match. It is still
+not an acceptable desktop release.
 
-From the supplied verifier checkout, `npm run test:release-live` failed with:
+## Verification summary
 
-```text
-Error: Release notes do not identify this checkout.
-```
+- Clean checkout and install: PASS.
+- Required claims: all exercised; `release-candidate-provenance`: **FAIL**.
+- Unit/native suite (`npm test`): PASS (11 Vitest, 8 Rust).
+- Production build (`npm run build`): PASS (`dist/app`, `dist/site`).
+- Browser claim suite: PASS (28 desktop/mobile claim cases).
+- Live first-read, one-click sample demo, outgoing-request privacy, headers,
+  keyboard focus, reduced motion, and Axe serious/critical checks: PASS.
+- Debian license-notice and Clippy checks were still compiling in the clean
+  verification workspace when this handoff was written; they cannot change the
+  release-blocking provenance result.
 
-The old release was `v0.1.10` from
-`4c205328041f2a5bd721c0bb87934e5262c20c2c`, while the page was stamped with
-`04915d4900e2a951aeb17afbb946763232f77c1b`.
+Full evidence is in `.factory/verification-8.md`.
 
-## What changed
+## Next step
 
-- Bumped the app, site, package, and Tauri versions to `0.1.11` for a new
-  immutable release tag.
-- Replaced the 256 MiB JSON-array rejection/full-array parse with a Serde
-  visitor that streams one JSON object at a time. Headers, profiles, previews,
-  recipe previews, joins, and exports now make bounded passes over JSON arrays
-  without materialising the enclosing array.
-- Added `large-json-arrays`, a regression claim that creates a valid JSON array
-  just beyond the prior 256 MiB boundary and verifies both records profile.
-- Pre-cache every emitted hashed site JS/CSS asset, including the demo module.
-  Pre-cached shell assets are cache-first; the landing HTML is an offline
-  fallback only for navigations, never for a module request. The cold-landing
-  offline regression now uses the emitted production site.
-- Raised the desktop-app skip link to at least 44 by 44 CSS pixels and added it
-  to the touch-target claim measurement.
-- Kept availability truthful: this release remains free, with no checkout,
-  license token, or locked data tool. That is a deliberate scope deviation
-  from the brief's one-time monetization rather than a non-functional paid
-  flow.
-
-## Verification
-
-Run from a clean dependency install:
-
-```text
-PASS npm ci
-PASS npm test
-     11 Vitest tests; 8 Rust tests
-     includes claim_large_json_arrays_stream_past_the_previous_256_mib_guard
-     (valid >256 MiB JSON array; 2 rows profile in 22.18 s)
-PASS npx --no-install tsc --noEmit
-PASS cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
-PASS cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets --all-features -- -D warnings
-PASS npm run build
-     dist/app and dist/site produced
-     app JS 20.38 kB raw / 7.29 kB gzip; app CSS 11.44 kB raw
-     site JS 6.88 kB raw; site CSS 12.72 kB raw
-PASS npm run test:e2e
-     36/36 desktop Chromium and 390 px mobile tests
-     includes production-hashed cold-cache demo: 5 rows, then 3 shipped rows,
-     with no module MIME error
-PASS CI=true npm run test:bundle-notices
-     Local Data Workbench_0.1.11_amd64.deb contains LICENSE,
-     THIRD_PARTY_NOTICES.md, and LICENSES/Apache-2.0.txt
-PASS npm run test:release-live
-     after publishing v0.1.11 and deploying the identically stamped site
-```
-
-The Playwright suite uses the emitted Vite site for all site claims and runs
-Axe checks in landing, demo, browser-workbench, dialog, and error states. It
-covers keyboard access, reduced-touch target measurements, demo isolation,
-offline reload, release mismatch safety, and same-origin privacy requests.
-
-## Release and deploy
-
-1. The `v0.1.11` tag triggers `.github/workflows/release.yml`, which builds
-   Linux, macOS arm64/x64, and Windows assets from the tag's exact commit,
-   then publishes `latest.json`, `SHA256SUMS`, GitHub asset digests, and
-   release notes with `Source commit: <tag commit>`.
-2. Build the static deploy artifact only from that same checked-out tag:
-
-   ```sh
-   sh scripts/build-site-candidate.sh "$(git rev-parse HEAD)" /tmp/local-data-workbench-site
-   ```
-
-3. Deploy that directory using the scoped static deployment configuration:
-
-   ```sh
-   /opt/fleet/lib/deploy-static.sh local-data-workbench /tmp/local-data-workbench-site
-   ```
-
-4. `npm run test:release-live` then verifies the real GitHub metadata, every
-   published platform entry, the downloaded Linux SHA-256, live installers,
-   and live site build identity together.
-
-## Known gaps and operator notes
-
-- macOS and Windows packages remain honestly labelled unsigned unless their
-  certificate secrets are configured. No signing is claimed without those
-  credentials.
-- The release is intentionally free at present. If one-time monetization is
-  restored, it must use the Sociobot billing API with a real registered product
-  and license verification; no placeholder checkout is shipped.
-- JSON parsing is bounded by an individual record plus the fixed preview and
-  profile state. A single exceptionally large JSON object can still require
-  memory proportional to that record.
+Publish a new release built from this exact candidate, deploy the identically
+stamped static site, and rerun `npm run test:release-live`. Do not claim PASS
+until that command succeeds against the published release and live site.
