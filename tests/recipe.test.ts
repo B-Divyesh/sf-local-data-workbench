@@ -40,6 +40,12 @@ describe('portable recipe execution', () => {
     const reopened = JSON.parse(saved) as Recipe;
     reopened.source.path = '/moved/people.csv';
     expect(reopened.schema).toBe('local-data-workbench/recipe@1');
+    expect(reopened).toMatchObject({
+      name: 'Approved people',
+      created_at: '2026-09-02T00:00:00.000Z',
+      updated_at: '2026-09-02T00:00:00.000Z',
+      source: { name: 'people.csv', format: 'csv', fingerprint: 'abc123' }
+    });
     expect(reopened.source.path).toBe('/moved/people.csv');
     expect(reopened.source.fingerprint).toBe('abc123');
     expect(applyPreview(source, reopened.steps).rows).toEqual([[' Ada ', 'keep', '10']]);

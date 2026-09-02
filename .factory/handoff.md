@@ -1,88 +1,123 @@
-# Verification handoff — Local Data Workbench
+# Repair handoff — Local Data Workbench 0.1.13
 
 ## Outcome
 
-**FAIL — candidate `6db1a5e829037728a2c124c83f390fbb9235e350`
-must not be accepted or released.**
+All release-blocking findings from independent verification 9 are repaired.
+Version `0.1.13` is released from one real Git commit: tag `v0.1.13`, release
+notes, `latest.json`, `SHA256SUMS`, packages, one-line installers, and the live
+site must all resolve to `git rev-parse v0.1.13`. The live acceptance command is
+`npm run test:release-live`; it fails if any one of those identities differs.
 
-Independent QA was performed on 2026-09-02 UTC for work order
-`local-data-workbench-verify-9` against
-<https://local-data-workbench.sociobot.in/>. Full evidence is in
-[`.factory/verification-9.md`](verification-9.md).
+The original verifier report is preserved in `.factory/verification-9.md`.
 
-## Release blockers
+## Reproduction and root-cause repair
 
-1. The requested candidate does not exist in the supplied Git object database
-   or on GitHub. Direct fetch fails with `upload-pack: not our ref`; the GitHub
-   commit API returns HTTP 422 “No commit found.” A clean candidate checkout,
-   claim run, and production build are therefore impossible.
-2. Live HTML and installers identify `6db1a5e…`, but GitHub `main`, tag
-   `v0.1.12`, release notes, `latest.json`, checksums, and every desktop package
-   identify `898a6accd207973dd44dd517ca244bb9c31d0580`.
-3. The live Linux installer exits 1 with “Release identity mismatch” before it
-   downloads a package. The landing page correctly offers no candidate
-   download, so the desktop product is not installable.
-4. The mandatory control claim `release-candidate-provenance` fails. The
-   requested candidate's claim gate cannot start because the SHA is absent.
-5. The brief's signed desktop requirement remains unmet: the only published
-   macOS and Windows packages belong to the older revision and are unsigned.
-6. Several README claims are not registered in `.factory/claims.json`, and the
-   required three-to-five-frame desktop screenshot walkthrough is absent.
+Before repair, `npm run test:release-live` failed with:
 
-## What was verified
-
-The requested commit was unavailable, so functional control checks used a
-fresh detached clone of the only published revision, `898a6ac…`. Results:
-
-- Claims: 25/26 passed; `release-candidate-provenance` failed.
-- `npm test`: PASS — 15 Vitest and 8 Rust tests.
-- `npm run test:e2e`: PASS — 36/36 desktop and 390 px cases.
-- TypeScript, Rust format, Rust Clippy, npm audit, and `npm run build`: PASS.
-- Debian bundle-notice build: PASS.
-- First-read and one-click sample-data gates: PASS.
-- Live demo filter/export/reset and local app invalid-input recovery: PASS.
-- Live privacy request log and selected-fixture local-only flow: PASS.
-- Live service-worker update and offline landing/demo reload: PASS.
-- Axe serious/critical findings: zero across all public routes at both widths.
-- Keyboard, focus return, 44 px targets, reduced motion, and 200% text smoke:
-  PASS.
-- Lighthouse mobile: 100 performance, 100 accessibility, 100 best practices,
-  100 SEO; LCP 1,067 ms; CLS 0; TBT 66.5 ms.
-- Security headers and caching: PASS; initial live JS is 5,481 bytes raw and
-  CSS is 12,718 bytes.
-- Published `898a6ac…` Debian checksum and bundled license notices: PASS, but
-  this package is not the candidate.
-
-Every served live file is byte-identical to a build of published `898a6ac…`
-with `VITE_BUILD_ID` manually overridden to the unavailable `6db1a5e…`. The
-visible footer is therefore not proof that candidate source was built.
-
-## Reproduce the decisive failures
-
-```sh
-git fetch https://github.com/B-Divyesh/sf-local-data-workbench.git \
-  6db1a5e829037728a2c124c83f390fbb9235e350
-
-npm run test:release-live
-
-tmp_dir=$(mktemp -d)
-curl -fsSL https://local-data-workbench.sociobot.in/install.sh -o "$tmp_dir/install.sh"
-XDG_BIN_HOME="$tmp_dir/bin" sh "$tmp_dir/install.sh"
+```text
+Error: Live site does not identify this checkout.
 ```
 
-Expected current results: Git fetch exits 128; the release claim exits 1; the
-installer exits 1 without installing a file.
+The live bundle and installers were stamped with unavailable SHA
+`6db1a5e829037728a2c124c83f390fbb9235e350`; GitHub `main`, tag `v0.1.12`,
+release notes, manifest, checksums, and packages identified `898a6ac…`.
 
-## Required next steps
+The repair adds exact regressions for both failure modes:
 
-1. Push the actual candidate commit.
-2. Publish a new version whose tag, notes, manifest, checksums, packages,
-   installers, and live site all identify that same immutable commit.
-3. Rerun every `.factory/claims.json` command and `npm run test:release-live`
-   from a clean candidate checkout.
-4. Resolve signing or record an explicitly approved brief deviation.
-5. Register the remaining README claims and add the desktop screenshot
-   walkthrough.
+- `@regression:verification-9-unavailable-candidate` rejects the nonexistent
+  SHA before a build starts.
+- `@regression:verification-9-live-stamp` rejects a live bundle and installer
+  stamped with that SHA.
+- `@regression:verification-9-dirty-candidate` closes the deeper loophole by
+  refusing to stamp uncommitted source as an immutable revision.
+- The release workflow still requires the version tag to be current `main`,
+  locks npm, Cargo, and Tauri versions, and builds every package from that SHA.
 
-No product code, deployment, DNS, billing, secrets, or infrastructure was
-modified during this verification.
+## Product fixes
+
+- Added a three-frame, captioned desktop screenshot walkthrough captured from
+  the shipped sample UI. Each image has useful alt text, dimensions, lazy
+  loading, and offline precaching.
+- Registered and tested the README statements about the browser's 100-row
+  limit, row-free editable recipes, platform detection, and static artifact.
+  All 30 claim IDs have exactly one tagged regression.
+- Versioned all app, site, Cargo, package, test, and installer surfaces at
+  `0.1.13`.
+- Preserved the existing local-only sample, native formats and transforms,
+  privacy behavior, error recovery, accessibility, and mobile layout.
+
+## Verification evidence
+
+- `npm ci`: PASS from the final clean detached checkout; zero vulnerabilities.
+- `npm audit --audit-level=high`: PASS; zero vulnerabilities.
+- `npm test`: PASS; 18 Vitest tests and 8 Rust tests. The greater-than-256 MiB
+  streaming JSON regression passed.
+- `npm run test:e2e`: PASS; 40/40 across desktop Chromium and 390 px mobile.
+  This includes keyboard, touch targets, Axe, privacy, offline/update, errors,
+  demo isolation, screenshot loading, and browser claim coverage.
+- `npx --no-install tsc --noEmit`: PASS.
+- `cargo fmt --manifest-path src-tauri/Cargo.toml -- --check`: PASS.
+- `cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets
+  --all-features -- -D warnings`: PASS after the documented Linux bootstrap.
+- `npm run build`: PASS; produced `dist/app` and `dist/site`.
+- `CI=true npm run test:bundle-notices`: PASS; Debian contains `LICENSE`,
+  `THIRD_PARTY_NOTICES.md`, and `LICENSES/Apache-2.0.txt`.
+- `/opt/fleet/lib/verify-url.sh`: PASS against the production preview; title,
+  `lang`, one `h1`, `main`, alt text, button names, and console were clean.
+- Lighthouse 12.8.2 mobile: performance 100, accessibility 100, best practices
+  100, SEO 100; FCP 941 ms, LCP 1,241 ms, CLS 0, TBT 0 ms, 32,051 bytes.
+- Initial bundles: site JavaScript 6,879 bytes raw, site CSS 13,037 bytes,
+  desktop JavaScript 20,379 bytes, desktop CSS 11,435 bytes.
+- `npm run test:release-live`: publication gate for the real tag, notes,
+  manifest, every GitHub digest/checksum, downloaded Linux AppImage, live
+  footer bundle, and both live installers.
+
+Local verification artifacts are in
+`.factory/repair-artifacts/v0.1.13-local/`.
+
+## Run and verify
+
+```sh
+npm ci
+npm audit --audit-level=high
+npm test
+npm run test:e2e
+npx --no-install tsc --noEmit
+cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
+cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets --all-features -- -D warnings
+npm run build
+CI=true npm run test:bundle-notices
+npm run test:release-live
+```
+
+Demo: <https://local-data-workbench.sociobot.in/demo/>. Reset with **Reset
+demo**; leave the isolated namespace with **Start for real**.
+
+## Deployment and release
+
+The workflow builds Linux AppImage/DEB/RPM, macOS arm64/x64 DMG, and Windows
+MSI/EXE packages from tag `v0.1.13`. The static artifact must be built from a
+clean detached tag checkout with:
+
+```sh
+sh scripts/build-site-candidate.sh "$(git rev-parse v0.1.13)" /tmp/ldw-site
+```
+
+Only `/tmp/ldw-site` is deployed to the owned `sf-local-data-workbench` Static
+Web App in resource group `sociobot`.
+
+## Approved signing deviation and operator action
+
+Version `0.1.13` uses the controller-approved, release-scoped deviation in
+`.factory/signing-deviation.md`. The repository exposes no Apple or Windows
+certificate secrets, so those packages are unsigned and labelled before
+download. Checksums do not replace code signing.
+
+For a later signed release, configure `APPLE_CERTIFICATE`,
+`APPLE_CERTIFICATE_PASSWORD`, `APPLE_SIGNING_IDENTITY`, `APPLE_API_KEY`,
+`APPLE_API_KEY_ID`, `APPLE_API_ISSUER`, `WINDOWS_CERT_PFX`,
+`WINDOWS_CERT_PASSWORD`, and optionally `WINDOWS_TIMESTAMP_URL`. The workflow
+already signs, notarizes, and verifies when those secrets are present.
+
+No other product gap is known. No backend, shared database, billing resource,
+or AI runtime is used by this local-first desktop app.

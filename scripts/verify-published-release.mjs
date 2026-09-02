@@ -3,6 +3,8 @@ import { execFileSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { assertPublishedSite, assertReleaseContract } from './release-contract.mjs';
 
+// @claim:release-candidate-provenance
+
 const repository = 'B-Divyesh/sf-local-data-workbench';
 const site = 'https://local-data-workbench.sociobot.in';
 const { version } = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));

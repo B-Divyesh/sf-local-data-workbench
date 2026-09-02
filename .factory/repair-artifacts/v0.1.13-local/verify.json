@@ -1,0 +1,14 @@
+{
+  "url": "http://127.0.0.1:4173/",
+  "loadMs": 792,
+  "errors": [],
+  "a11y": {
+    "title": "Local Data Workbench — Inspect local data files",
+    "lang": "en",
+    "h1": 1,
+    "main": true,
+    "imgsMissingAlt": 0,
+    "buttonsUnlabeled": 0,
+    "textLength": 3530
+  }
+}

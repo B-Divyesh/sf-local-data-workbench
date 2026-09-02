@@ -49,7 +49,7 @@ The landing page detects the visitor's operating system and resolves assets only
 curl -fsSL https://local-data-workbench.sociobot.in/install.sh | sh
 ```
 
-The Linux installer pins its version and source commit, then verifies SHA-256 before installing the AppImage. The Windows script applies the same identity and checksum checks. Each script prints an explicit warning when its package is unsigned. The manifest is delivered over HTTPS and is not cryptographically signed.
+The Linux installer pins its version and source commit, then verifies SHA-256 before installing the AppImage. The Windows script applies the same identity and checksum checks. Each script prints an explicit warning when its package is unsigned.
 
 ## Recipe format
 

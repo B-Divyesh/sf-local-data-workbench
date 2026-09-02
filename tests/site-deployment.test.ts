@@ -43,7 +43,7 @@ describe('static deployment identity', () => {
     }
   });
 
-  it('@regression:stale-static-deployment embeds the exact checked-out candidate revision in an isolated site artifact', async () => {
+  it('@claim:static-deploy-artifact @regression:stale-static-deployment embeds the exact checked-out candidate revision in an isolated site artifact', async () => {
     const worktree = await cleanWorktree();
     const outputDirectory = await mkdtemp(join(tmpdir(), 'local-data-workbench-site-'));
     try {
