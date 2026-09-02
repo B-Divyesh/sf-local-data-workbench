@@ -20,8 +20,7 @@
         </div>
         <div class="mast-meta" aria-label="Application status">
           <span id="connection-state">Offline-ready</span>
-          <span id="license-badge">Free desk</span>
-          <button class="text-button" id="license-button" type="button">Paid access</button>
+          <span id="access-badge">All tools included</span>
         </div>
       </header>
 
@@ -70,7 +69,7 @@
               <label class="visually-hidden" for="export-format">Export format</label>
               <select id="export-format" class="compact-select" aria-label="Export format" disabled>
                 <option value="csv">CSV</option>
-                <option value="jsonl">JSON Lines · paid access unavailable</option>
+                <option value="jsonl">JSON Lines</option>
               </select>
               <button class="secondary" id="export-data" type="button" disabled>Export result</button>
             </div>
@@ -117,7 +116,7 @@
 
       <footer class="app-footer">
         <span id="status" role="status" aria-live="polite">Ready for a local file.</span>
-        <span class="folio">Build <span id="build-id">0.1.9 · source checkout</span></span>
+        <span class="folio">Build <span id="build-id">0.1.10 · source checkout</span></span>
       </footer>
     </div>
 
@@ -144,20 +143,5 @@
       </form>
     </dialog>
 
-    <dialog id="license-dialog" aria-labelledby="license-title">
-      <form method="dialog" id="license-form">
-        <div class="dialog-head">
-          <div><p class="section-number">Paid access status</p><h2 id="license-title">Paid access is unavailable</h2></div>
-          <button class="icon-button" value="cancel" aria-label="Close dialog" type="submit">×</button>
-        </div>
-        <p>Paid features are withheld until signed macOS and Windows desktop installers can be verified.</p>
-        <p>CSV inspection, transformations, three saved recipes, recipe reopening, and CSV export remain free.</p>
-        <p id="license-notice" class="muted" role="status">No checkout or license verification runs while paid access is unavailable.</p>
-        <div class="dialog-actions">
-          <button class="secondary" value="cancel" type="submit">Close</button>
-        </div>
-        <p class="legal-small">See the <a href="https://local-data-workbench.sociobot.in/privacy" target="_blank">Privacy notice</a> and <a href="https://local-data-workbench.sociobot.in/terms" target="_blank">Terms</a>.</p>
-      </form>
-    </dialog>
   </body>
 </html>

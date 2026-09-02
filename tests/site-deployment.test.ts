@@ -21,6 +21,13 @@ describe('static deployment identity', () => {
       const bundles = await Promise.all(assetFiles.filter((name) => name.endsWith('.js')).map((name) => readFile(join(outputDirectory, 'assets', name), 'utf8')));
       expect(bundles.some((bundle) => bundle.includes(currentCommit))).toBe(true);
       await expect(readFile(join(outputDirectory, 'index.html'), 'utf8')).resolves.toContain('/assets/');
+      for (const installer of ['install.sh', 'install.ps1']) {
+        const contents = await readFile(join(outputDirectory, installer), 'utf8');
+        expect(contents).toContain(currentCommit);
+        expect(contents).toContain('v0.1.10');
+        expect(contents).not.toContain('__LDW_');
+        expect(contents).not.toContain('/releases/latest/download');
+      }
     } finally {
       await rm(outputDirectory, { recursive: true, force: true });
     }

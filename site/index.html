@@ -21,7 +21,7 @@
   <body>
     <a class="skip-link" href="#main">Skip to main content</a>
     <header class="site-header">
-      <a class="wordmark" href="/" aria-label="Local Data Workbench home"><span>Local Data</span><strong>Workbench</strong></a>
+      <a class="wordmark" href="/" aria-label="Local Data Workbench"><span>Local Data</span> <strong>Workbench</strong></a>
       <nav aria-label="Primary navigation">
         <a href="/demo/">Demo</a><a href="#method">How it works</a><a href="#download">Download</a><a href="/privacy/">Privacy</a>
       </nav>
@@ -38,6 +38,7 @@
             <span class="action-note">Opens an isolated sample project.</span>
             <a id="primary-download" class="text-link" aria-disabled="true">Checking desktop downloads</a>
           </div>
+          <ul class="hero-facts" aria-label="Product facts"><li>Files stay on your device.</li><li>Works offline after the first visit.</li><li>Free. No account needed.</li></ul>
           <p id="download-detail" class="download-detail" role="status">Checking a release that matches this page…</p>
         </div>
         <figure class="hero-art">
@@ -51,7 +52,7 @@
       </section>
 
       <section class="proof-strip" aria-label="Product promises">
-        <span>01 · Sample opens in one click</span><span>02 · Sample data stays in the page</span><span>03 · Recipes are JSON files</span><span>04 · Linux build available</span>
+        <span>01 · Sample opens in one click</span><span>02 · Sample data stays in the page</span><span>03 · Recipes are JSON files</span><span>04 · Downloads match this build</span>
       </section>
 
       <section id="method" class="method section-rule" aria-labelledby="method-title">
@@ -102,16 +103,15 @@
         </div>
       </section>
 
-      <section id="license" class="pricing section-rule" aria-labelledby="pricing-title">
+      <section id="access" class="pricing section-rule" aria-labelledby="pricing-title">
         <div>
-          <p class="eyebrow">Free desk</p>
-          <h2 id="pricing-title">Use the free local workbench today.</h2>
-          <p>Inspect files, transform rows, save three recipes, reopen recipes, and export CSV without a paid license.</p>
+          <p class="eyebrow">Included tools</p>
+          <h2 id="pricing-title">Use every local tool for free.</h2>
+          <p>Inspect files, join reference data, save recipes, reopen them, and export CSV or JSON Lines.</p>
         </div>
         <div class="price-block">
-          <span class="price">Free</span><span>available now</span>
-          <span class="button primary" aria-hidden="true">Paid access paused</span>
-          <small>No checkout or license verification is offered until signed macOS and Windows installers are verified.</small>
+          <span class="price">Free</span><span>no account needed</span>
+          <small>This release has no checkout, license token, or locked data tool.</small>
         </div>
       </section>
 
@@ -124,7 +124,7 @@
         <div class="download-grid">
           <article data-platform-card="macos"><span class="platform-mark" aria-hidden="true">⌘</span><h3>macOS</h3><p>Apple silicon and Intel disk images.</p><a data-platform="mac-arm64" hidden>Apple silicon</a><a data-platform="mac-x64" hidden>Intel</a><p class="platform-unavailable" data-platform-unavailable="macos">macOS packages are being published.</p><p class="signing-status" data-signing-status="macos" role="status">Signing status loads with the release.</p></article>
           <article data-platform-card="windows"><span class="platform-mark" aria-hidden="true">⊞</span><h3>Windows</h3><p>Windows 10/11 installer.</p><a data-platform="windows" hidden>Download installer</a><p class="platform-unavailable" data-platform-unavailable="windows">Windows packages are being published.</p><p class="signing-status" data-signing-status="windows" role="status">Signing status loads with the release.</p></article>
-          <article data-platform-card="linux"><span class="platform-mark" aria-hidden="true">#</span><h3>Linux</h3><p>AppImage and Debian package.</p><a data-platform="linux" hidden>Download AppImage</a><div class="installer-command" role="region" aria-label="Linux installer command" tabindex="0"><code>curl -fsSL https://local-data-workbench.sociobot.in/install.sh | sh</code></div><small>The installer verifies SHA-256 before placing the AppImage in ~/.local/bin.</small></article>
+          <article data-platform-card="linux"><span class="platform-mark" aria-hidden="true">#</span><h3>Linux</h3><p>AppImage and Debian package.</p><a data-platform="linux" hidden>Download AppImage</a><div data-installer-command hidden><div class="installer-command" role="region" aria-label="Linux installer command" tabindex="0"><code>curl -fsSL https://local-data-workbench.sociobot.in/install.sh | sh</code></div><small>The installer checks the release version, source commit, and SHA-256 before installing.</small></div><p class="platform-unavailable" data-platform-unavailable="linux">Linux packages are being published.</p></article>
         </div>
         <p id="release-state" class="release-state" role="status">Checking the latest published checksums…</p>
         <p class="release-state">Verify a download: <a id="release-manifest" aria-disabled="true">latest.json</a> · <a id="release-sums" aria-disabled="true">SHA256SUMS</a> · <a href="https://github.com/B-Divyesh/sf-local-data-workbench/releases">Release history</a></p>
@@ -143,7 +143,7 @@
     </main>
 
     <footer class="site-footer">
-      <div class="wordmark"><span>Local Data</span><strong>Workbench</strong></div>
+      <div class="wordmark"><span>Local Data</span> <strong>Workbench</strong></div>
       <p>Inspect and reshape local data files with saved recipes.</p>
       <nav aria-label="Legal"><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><a href="https://github.com/B-Divyesh/sf-local-data-workbench">Source</a></nav>
       <p>Built by Param Factory · Build <span data-build-id>source checkout</span></p>

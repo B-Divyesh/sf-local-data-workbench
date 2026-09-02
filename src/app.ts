@@ -18,11 +18,10 @@ const errorState = $('#error-state');
 const tableRegion = $('#table-region');
 const table = $('#data-table');
 const stepDialog = $<HTMLDialogElement>('#step-dialog');
-const licenseDialog = $<HTMLDialogElement>('#license-dialog');
 const browserFile = $<HTMLInputElement>('#browser-file');
 const exportFormat = $<HTMLSelectElement>('#export-format');
 const BUILD_ID = import.meta.env.VITE_BUILD_ID ?? 'source checkout';
-const APP_VERSION = import.meta.env.VITE_APP_VERSION ?? '0.1.9';
+const APP_VERSION = import.meta.env.VITE_APP_VERSION ?? '0.1.10';
 
 const sampleData: TableData = {
   headers: ['order_id', 'region', 'status', 'amount'],
@@ -36,7 +35,6 @@ const sampleData: TableData = {
 let dataset: DatasetSummary | null = null;
 let steps: RecipeStep[] = [];
 let transformed: TableData | null = null;
-let unlocked = false;
 let joinPath = '';
 let demoMode = false;
 
@@ -51,11 +49,6 @@ function showOnly(state: 'empty' | 'loading' | 'error' | 'table'): void {
 
 function updateConnectivity(): void {
   $('#connection-state').textContent = navigator.onLine ? 'Online · local processing' : 'Offline-ready';
-}
-
-function updateLicenseUI(): void {
-  $('#license-badge').textContent = 'Free desk';
-  exportFormat.options[1].textContent = 'JSON Lines · paid access unavailable';
 }
 
 function displayError(title: string, detail: string): void {
@@ -251,7 +244,6 @@ function renderStepFields(): void {
 
 async function addStep(): Promise<void> {
   const kind = $<HTMLSelectElement>('#step-kind').value as RecipeStep['type'];
-  if (kind === 'join' && !unlocked) { stepDialog.close(); $('#license-notice').textContent = 'Paid local joins are unavailable until signed desktop releases are verified.'; licenseDialog.showModal(); return; }
   const name = $<HTMLInputElement>('#step-name').value.trim();
   let step: RecipeStep;
   if (!name) { $('#step-error').textContent = 'Give this step a name so the recipe stays auditable.'; return; }
@@ -298,7 +290,6 @@ async function saveRecipe(): Promise<void> {
   const savedRecipeKey = demoMode ? 'demo:ldw:saved-recipe-keys' : 'ldw:saved-recipe-keys';
   const existingKeys = savedRecipeKeys(savedRecipeKey);
   const currentKey = recipeKey();
-  if (!unlocked && !existingKeys.includes(currentKey) && existingKeys.length >= 3) { $('#license-notice').textContent = 'The free desk includes three saved recipes. Paid access is unavailable until signed desktop releases are verified.'; licenseDialog.showModal(); return; }
   const contents = `${JSON.stringify(currentRecipe(), null, 2)}\n`;
   if (isTauri()) {
     const destination = await save({ defaultPath: `${dataset.name.replace(/\.[^.]+$/, '')}.ldw.json`, filters: [{ name: 'Workbench recipe', extensions: ['ldw.json', 'json'] }] });
@@ -319,7 +310,6 @@ async function openRecipe(): Promise<void> {
   try {
     const recipe = JSON.parse(await invoke<string>('read_text_file', { path })) as Recipe;
     if (recipe.schema !== 'local-data-workbench/recipe@1') throw new Error('Unsupported recipe version.');
-    if (!unlocked && recipe.steps.some((step) => step.type === 'join')) { $('#license-notice').textContent = 'This recipe contains a paid local join, which is unavailable until signed desktop releases are verified.'; licenseDialog.showModal(); return; }
     showOnly('loading');
     let summary: DatasetSummary;
     try { summary = await invoke<DatasetSummary>('analyze_file', { path: recipe.source.path }); }
@@ -336,11 +326,18 @@ async function openRecipe(): Promise<void> {
 async function exportData(): Promise<void> {
   if (!dataset) return;
   const format = exportFormat.value as 'csv' | 'jsonl';
-  if (format === 'jsonl' && !unlocked) { $('#license-notice').textContent = 'JSON Lines export is paid access and is unavailable until signed desktop releases are verified. CSV export remains free.'; licenseDialog.showModal(); exportFormat.value = 'csv'; return; }
   if (!isTauri()) {
     const data = transformed ?? { headers: dataset.headers, rows: dataset.rows };
-    const csv = [data.headers, ...data.rows].map((row) => row.map((value) => `"${value.replaceAll('"', '""')}"`).join(',')).join('\n');
-    const anchor = document.createElement('a'); anchor.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); anchor.download = `result.csv`; anchor.click(); URL.revokeObjectURL(anchor.href); setStatus('Exported the browser preview. Install the app to process the complete file.'); return;
+    const contents = format === 'csv'
+      ? [data.headers, ...data.rows].map((row) => row.map((value) => `"${value.replaceAll('"', '""')}"`).join(',')).join('\n')
+      : data.rows.map((row) => JSON.stringify(Object.fromEntries(data.headers.map((header, index) => [header, row[index] ?? ''])))).join('\n');
+    const anchor = document.createElement('a');
+    anchor.href = URL.createObjectURL(new Blob([contents], { type: format === 'csv' ? 'text/csv' : 'application/x-ndjson' }));
+    anchor.download = `result.${format}`;
+    anchor.click();
+    URL.revokeObjectURL(anchor.href);
+    setStatus(`Exported the browser preview as ${format === 'csv' ? 'CSV' : 'JSON Lines'}. Install the app to process the complete file.`);
+    return;
   }
   const destination = await save({ defaultPath: `result.${format}`, filters: [{ name: format === 'csv' ? 'CSV result' : 'JSON Lines result', extensions: [format] }] });
   if (!destination) return;
@@ -363,7 +360,6 @@ function bindEvents(): void {
   $('#save-recipe').addEventListener('click', saveRecipe);
   $('#open-recipe').addEventListener('click', openRecipe);
   $('#export-data').addEventListener('click', exportData);
-  $('#license-button').addEventListener('click', () => licenseDialog.showModal());
   window.addEventListener('online', updateConnectivity); window.addEventListener('offline', updateConnectivity);
   document.addEventListener('keydown', (event) => {
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'o') { event.preventDefault(); void openSource(); }
@@ -374,8 +370,7 @@ function bindEvents(): void {
 async function start(): Promise<void> {
   $('#build-id').textContent = `${APP_VERSION} · ${BUILD_ID}`;
   const directDemo = location.search.includes('demo=1');
-  unlocked = false;
-  updateLicenseUI(); updateConnectivity(); renderSource(); renderRecipe(); bindEvents(); showOnly('empty');
+  updateConnectivity(); renderSource(); renderRecipe(); bindEvents(); showOnly('empty');
   if (directDemo) await loadSample();
 }
 

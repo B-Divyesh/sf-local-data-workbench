@@ -1,5 +1,7 @@
 $ErrorActionPreference = "Stop"
-$releaseRoot = "https://github.com/B-Divyesh/sf-local-data-workbench/releases/latest/download"
+$expectedCommit = "__LDW_SOURCE_COMMIT__"
+$expectedVersion = "v__LDW_APP_VERSION__"
+$releaseRoot = if ($env:LDW_RELEASE_ROOT) { $env:LDW_RELEASE_ROOT } else { "https://github.com/B-Divyesh/sf-local-data-workbench/releases/download/$expectedVersion" }
 $workDir = Join-Path $env:TEMP ("local-data-workbench-" + [guid]::NewGuid().ToString("N"))
 New-Item -ItemType Directory -Path $workDir | Out-Null
 
@@ -7,6 +9,9 @@ try {
   $manifestPath = Join-Path $workDir "latest.json"
   Invoke-WebRequest -UseBasicParsing "$releaseRoot/latest.json" -OutFile $manifestPath
   $manifest = Get-Content -Raw $manifestPath | ConvertFrom-Json
+  if ($manifest.commit -ne $expectedCommit -or $manifest.version -ne $expectedVersion) {
+    throw "Release identity mismatch. Expected $expectedVersion from $expectedCommit. Nothing was downloaded or installed."
+  }
   $asset = $manifest.platforms.windows
   if ($null -eq $asset) { throw "No Windows installer is published. Nothing was downloaded or installed." }
   if (-not $manifest.signing.windows) {

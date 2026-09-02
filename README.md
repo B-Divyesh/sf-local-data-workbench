@@ -7,11 +7,11 @@ Use the one-click [sample demo](https://local-data-workbench.sociobot.in/demo/) 
 ## What it does
 
 - Opens local CSV, JSON, JSON Lines, and Parquet files.
-- Profiles columns and provides named filters, derived columns, renames, and selections.
+- Profiles columns and provides named filters, local joins, derived columns, renames, and selections.
 - Saves readable `.ldw.json` recipes with source fingerprints.
 - Exports the complete native source; the browser fallback labels its 100-row limit before export.
 
-The free desk includes inspection, transformations, CSV export, recipe reopening, and three saved recipes. Paid access is withheld until signed macOS and Windows installers are verifiably available.
+This release includes local joins, CSV and JSON Lines export, recipe reopening, and unlimited saved recipes without an account.
 
 ## Develop
 
@@ -31,6 +31,7 @@ Browser development mode supports a bounded CSV/JSON preview. Parquet, complete-
 ```sh
 npm test             # TypeScript + Rust engine tests
 npm run test:e2e     # Chromium desktop and 390px accessibility flows
+npm run test:release-live # published release, package checksum, installer, and live-site identity
 npm run build        # dist/app and dist/site
 npm run build:site   # exact static deploy output: dist/site
 npm run tauri build  # current-platform desktop bundle
@@ -41,13 +42,13 @@ The static factory deploy publishes `dist/site`, with `index.html` at its root. 
 
 ## Install
 
-The landing page detects the visitor's operating system and resolves assets from the latest release manifest.
+The landing page detects the visitor's operating system and resolves assets only when the release tag and source commit match the page.
 
 ```sh
 curl -fsSL https://local-data-workbench.sociobot.in/install.sh | sh
 ```
 
-The Linux installer verifies SHA-256 before installing the downloaded AppImage. The macOS and Windows installers also verify SHA-256. They print an explicit warning if their package is unsigned. The manifest is delivered over HTTPS and is not cryptographically signed.
+The Linux installer pins its version and source commit, then verifies SHA-256 before installing the AppImage. The Windows script applies the same identity and checksum checks. Each script prints an explicit warning when its package is unsigned. The manifest is delivered over HTTPS and is not cryptographically signed.
 
 ## Recipe format
 

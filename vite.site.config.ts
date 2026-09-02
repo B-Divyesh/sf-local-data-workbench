@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import { execFileSync } from 'node:child_process';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 function buildId(): string {
@@ -11,8 +12,28 @@ function buildId(): string {
 function outputDir(): string {
   // The release repair builds into an isolated directory before deployment so
   // it never reuses a stale `dist/site` from a different checkout.
-  return process.env.SITE_OUTPUT_DIR ? resolve(process.env.SITE_OUTPUT_DIR) : '../dist/site';
+  return process.env.SITE_OUTPUT_DIR ? resolve(process.env.SITE_OUTPUT_DIR) : resolve(import.meta.dirname, 'dist/site');
 }
+
+function stampInstallers(commit: string, version: string) {
+  return {
+    name: 'stamp-installers',
+    closeBundle(): void {
+      for (const name of ['install.sh', 'install.ps1']) {
+        const path = resolve(outputDir(), name);
+        const source = readFileSync(path, 'utf8');
+        const stamped = source
+          .replaceAll('__LDW_SOURCE_COMMIT__', commit)
+          .replaceAll('__LDW_APP_VERSION__', version);
+        if (stamped.includes('__LDW_')) throw new Error(`Could not stamp ${name}`);
+        writeFileSync(path, stamped);
+      }
+    }
+  };
+}
+
+const commit = buildId();
+const version = process.env.npm_package_version ?? '0.1.10';
 
 export default defineConfig({
   root: 'site',
@@ -32,9 +53,10 @@ export default defineConfig({
       }
     }
   },
+  plugins: [stampInstallers(commit, version)],
   define: {
-    'import.meta.env.VITE_BUILD_ID': JSON.stringify(buildId()),
-    'import.meta.env.VITE_APP_VERSION': JSON.stringify(process.env.npm_package_version ?? '0.1.9')
+    'import.meta.env.VITE_BUILD_ID': JSON.stringify(commit),
+    'import.meta.env.VITE_APP_VERSION': JSON.stringify(version)
   },
   server: { watch: { ignored: ['**/src-tauri/target/**'] } }
 });

@@ -1,6 +1,6 @@
 {
   "name": "local-data-workbench",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "private": true,
   "type": "module",
   "scripts": {
@@ -13,6 +13,7 @@
     "test:unit": "vitest run",
     "test:rust": "cargo test --manifest-path src-tauri/Cargo.toml --no-default-features",
     "test:e2e": "playwright test",
+    "test:release-live": "node scripts/verify-published-release.mjs",
     "test:bundle-notices": "sh scripts/check-bundle-notices.sh",
     "tauri": "tauri"
   },

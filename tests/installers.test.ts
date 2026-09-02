@@ -12,12 +12,36 @@ describe('installer verification', () => {
     ]);
     expect(shell).toMatch(/sha256sum|shasum/);
     expect(shell).toMatch(/EXPECTED=.*sha256/);
+    expect(shell).toContain('manifest.get("commit") == sys.argv[2]');
+    expect(shell).toContain('manifest.get("version") == sys.argv[3]');
+    expect(shell).not.toContain('/releases/latest/download');
     expect(shell).toMatch(/No installer is published/);
     expect(shell).toMatch(/unsigned/);
     expect(powershell).toMatch(/Get-FileHash/);
     expect(powershell).toMatch(/SHA256/);
+    expect(powershell).toContain('$manifest.commit -ne $expectedCommit');
+    expect(powershell).toContain('$manifest.version -ne $expectedVersion');
+    expect(powershell).not.toContain('/releases/latest/download');
     expect(powershell).toMatch(/No Windows installer is published/);
     expect(powershell).toMatch(/unsigned/);
+  });
+
+  it('@regression:stale-shell-installer rejects a mismatched manifest before downloading an asset', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'local-data-workbench-stale-installer-'));
+    try {
+      await writeFile(join(directory, 'latest.json'), JSON.stringify({
+        version: 'v0.1.9', commit: 'd456abfd26315cc15e9c4bcb13c1638243d13557',
+        platforms: { linux: { url: 'https://example.invalid/stale.AppImage', sha256: '0'.repeat(64) } }
+      }));
+      expect(() => execFileSync('sh', ['public/install.sh'], {
+        cwd: process.cwd(),
+        env: { ...process.env, HOME: directory, XDG_BIN_HOME: join(directory, 'bin'), LDW_RELEASE_ROOT: `file://${directory}` },
+        stdio: 'pipe'
+      })).toThrow(/Release identity mismatch/);
+      await expect(readFile(join(directory, 'bin', 'local-data-workbench.AppImage'))).rejects.toThrow();
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
   });
 
   it('@claim:release-manifest-integrity @regression:flat-release-asset-names makes a complete SHA256SUMS check against the exact GitHub upload names', async () => {
@@ -44,7 +68,7 @@ describe('installer verification', () => {
     }
   });
 
-  it('@claim:release-candidate-provenance pins every package and its metadata to one immutable source revision', async () => {
+  it('@regression:release-workflow-provenance pins every package and its metadata to one immutable source revision', async () => {
     const workflow = await readFile(new URL('../.github/workflows/release.yml', import.meta.url), 'utf8');
     expect(workflow).toContain('Resolve the immutable release candidate');
     expect(workflow).toContain('VITE_BUILD_ID: ${{ needs.resolve-candidate.outputs.source_commit }}');

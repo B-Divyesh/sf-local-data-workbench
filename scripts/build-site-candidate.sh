@@ -29,5 +29,11 @@ if ! find "$OUTPUT_DIRECTORY/assets" -type f -name '*.js' -exec grep -lF "$EXPEC
   echo "Built site does not contain the requested source revision." >&2
   exit 1
 fi
+for installer in install.sh install.ps1; do
+  if ! grep -qF "$EXPECTED_COMMIT" "$OUTPUT_DIRECTORY/$installer" || grep -qF '__LDW_' "$OUTPUT_DIRECTORY/$installer"; then
+    echo "Built $installer does not enforce the requested source revision." >&2
+    exit 1
+  fi
+done
 
 echo "Built static site for $EXPECTED_COMMIT at $OUTPUT_DIRECTORY"

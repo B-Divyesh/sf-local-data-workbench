@@ -1,7 +1,9 @@
 #!/bin/sh
 set -eu
 
-RELEASE_ROOT="https://github.com/B-Divyesh/sf-local-data-workbench/releases/latest/download"
+EXPECTED_COMMIT="__LDW_SOURCE_COMMIT__"
+EXPECTED_VERSION="v__LDW_APP_VERSION__"
+RELEASE_ROOT="${LDW_RELEASE_ROOT:-https://github.com/B-Divyesh/sf-local-data-workbench/releases/download/$EXPECTED_VERSION}"
 WORK_DIR="$(mktemp -d)"
 trap 'rm -rf "$WORK_DIR"' EXIT INT TERM
 
@@ -16,6 +18,11 @@ esac
 curl -fsSL "$RELEASE_ROOT/latest.json" -o "$WORK_DIR/latest.json"
 if ! command -v python3 >/dev/null 2>&1; then
   echo "python3 is required to read the HTTPS release manifest." >&2
+  exit 1
+fi
+
+if ! python3 -c 'import json,sys; manifest=json.load(open(sys.argv[1])); sys.exit(0 if manifest.get("commit") == sys.argv[2] and manifest.get("version") == sys.argv[3] else 1)' "$WORK_DIR/latest.json" "$EXPECTED_COMMIT" "$EXPECTED_VERSION"; then
+  echo "Release identity mismatch. Expected $EXPECTED_VERSION from $EXPECTED_COMMIT. Nothing was downloaded or installed." >&2
   exit 1
 fi
 

@@ -1,4 +1,4 @@
-const CACHE = 'local-data-workbench-site-v2';
+const CACHE = 'local-data-workbench-site-v3';
 const SHELL = ['/', '/demo/', '/privacy/', '/terms/', '/404.html', '/assets/hero-ledger-640.webp', '/assets/hero-ledger-960.webp'];
 
 self.addEventListener('install', (event) => {

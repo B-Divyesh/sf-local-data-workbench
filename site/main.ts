@@ -2,7 +2,7 @@ import './site.css';
 
 const RELEASE_API = 'https://api.github.com/repos/B-Divyesh/sf-local-data-workbench/releases/latest';
 const BUILD_ID = import.meta.env.VITE_BUILD_ID ?? 'source checkout';
-const APP_VERSION = import.meta.env.VITE_APP_VERSION ?? '0.1.9';
+const APP_VERSION = import.meta.env.VITE_APP_VERSION ?? '0.1.10';
 
 interface PlatformAsset { url: string; sha256: string; name: string }
 interface Manifest {
@@ -36,8 +36,16 @@ function signingStatus(body = '', platform: 'macos' | 'windows'): boolean {
 }
 
 function releaseManifest(release: GithubRelease): Manifest | undefined {
+  const releasePath = `/B-Divyesh/sf-local-data-workbench/releases/download/${release.tag_name}/`;
   const find = (predicate: (name: string) => boolean): PlatformAsset | undefined => {
-    const asset = release.assets.find(({ name, digest }) => predicate(name.toLowerCase()) && /^sha256:[0-9a-f]{64}$/i.test(digest ?? ''));
+    const asset = release.assets.find(({ name, digest, browser_download_url }) => {
+      try {
+        const url = new URL(browser_download_url);
+        return url.protocol === 'https:' && url.hostname === 'github.com' && url.pathname.startsWith(releasePath)
+          && decodeURIComponent(url.pathname.split('/').at(-1) ?? '') === name
+          && predicate(name.toLowerCase()) && /^sha256:[0-9a-f]{64}$/i.test(digest ?? '');
+      } catch { return false; }
+    });
     if (!asset || !asset.digest) return undefined;
     return { name: asset.name, url: asset.browser_download_url, sha256: asset.digest.replace(/^sha256:/i, '') };
   };
@@ -113,6 +121,11 @@ function setChecksumLinks(manifest: Manifest): void {
   });
 }
 
+function setInstallerCommandAvailable(available: boolean): void {
+  const region = document.querySelector<HTMLElement>('[data-installer-command]');
+  if (region) region.hidden = !available;
+}
+
 async function loadRelease(): Promise<void> {
   const primary = document.querySelector<HTMLAnchorElement>('#primary-download');
   const detail = document.querySelector('#download-detail');
@@ -142,8 +155,10 @@ async function loadRelease(): Promise<void> {
     document.querySelectorAll<HTMLAnchorElement>('[data-platform]').forEach((link) => setPlatformLink(link, manifest.platforms[link.dataset.platform ?? ''], manifest.signing));
     setSigningText(manifest);
     setChecksumLinks(manifest);
+    setInstallerCommandAvailable(Boolean(manifest.platforms.linux));
     if (releaseState) releaseState.textContent = `${manifest.version} matches this page’s source commit. GitHub publishes SHA-256 for every asset.`;
   } catch {
+    setInstallerCommandAvailable(false);
     if (primary) setPrimaryUnavailable(primary, 'Downloads are being published');
     if (detail) detail.textContent = 'No release matching this page’s source revision is published yet.';
     if (releaseState) releaseState.textContent = 'Release metadata did not match this page. Installer links stay disabled.';
