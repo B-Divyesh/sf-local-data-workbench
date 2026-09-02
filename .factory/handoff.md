@@ -22,9 +22,7 @@ not an acceptable desktop release.
 - Browser claim suite: PASS (28 desktop/mobile claim cases).
 - Live first-read, one-click sample demo, outgoing-request privacy, headers,
   keyboard focus, reduced motion, and Axe serious/critical checks: PASS.
-- Debian license-notice and Clippy checks were still compiling in the clean
-  verification workspace when this handoff was written; they cannot change the
-  release-blocking provenance result.
+- Debian license-notice and Clippy checks: PASS.
 
 Full evidence is in `.factory/verification-8.md`.
 

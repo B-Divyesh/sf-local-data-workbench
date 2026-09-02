@@ -68,7 +68,7 @@ commands from the clean checkout. Browser claim coverage was run as the full
 | `free-saved-recipes`, `unlimited-saved-recipes`, `included-desktop-tools`, `demo-exit-discard` | PASS | Playwright claim suite passed in both browser projects. |
 | `touch-targets`, `installer-command-access`, `package-signing-disclosure` | PASS | Playwright claim suite passed in both browser projects. |
 | `local-workbench-privacy`, `landing-network-privacy`, `build-identity` | PASS | Playwright claim suite passed in both browser projects. |
-| `bundled-license-notices` | Pending at report time | `CI=true npm run test:bundle-notices` was building its clean Debian package; its result must be recorded before a repair handoff. |
+| `bundled-license-notices` | PASS | Clean Debian package contains `LICENSE`, `THIRD_PARTY_NOTICES.md`, and `LICENSES/Apache-2.0.txt`. |
 | `release-candidate-provenance` | **FAIL** | `npm run test:release-live` reports the release-note source-commit mismatch above. |
 
 The failed provenance claim is sufficient for **FAIL** irrespective of the
@@ -83,10 +83,11 @@ remaining package-notice command's result.
 - Production bundle sizes — PASS: desktop UI JavaScript 20.38 kB raw / 7.29
   kB gzip; site JavaScript 6.88 kB raw total / 3.23 kB gzip; site CSS 12.72 kB
   raw / 3.45 kB gzip; mobile hero 16,170 bytes.
-- `npx --no-install tsc --noEmit` and `cargo fmt --check` completed without
-  diagnostic output. The independently invoked Clippy and Debian-package jobs
-  were still compiling in the clean verification directory when this evidence
-  was written; neither affects the already failed release claim.
+- `npx --no-install tsc --noEmit`, `cargo fmt --check`, and
+  `cargo clippy --all-targets --all-features -- -D warnings` — PASS.
+- `CI=true npm run test:bundle-notices` — PASS; its clean Debian package
+  contains the MIT application license, third-party notices, and Arrow's
+  Apache-2.0 notice.
 
 ## End-to-end exercise
 
