@@ -1,6 +1,6 @@
 [package]
 name = "local-data-workbench"
-version = "0.1.12"
+version = "0.1.13"
 description = "Private, reproducible local file transformations"
 authors = ["Sociobot"]
 license = "MIT"

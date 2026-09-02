@@ -1,9 +1,14 @@
-const CACHE = 'local-data-workbench-site-v4';
+const CACHE = 'local-data-workbench-site-v5';
 // Vite replaces this development list with every hashed site JS/CSS asset at
 // production build time. Keeping the dev module paths here lets the same
 // cold-landing offline check exercise Vite's local server too.
 const PRECACHE_ASSETS = ['/main.ts', '/demo.ts', '/site.css'];
-const SHELL = ['/', '/demo/', '/privacy/', '/terms/', '/404.html', '/assets/hero-ledger-640.webp', '/assets/hero-ledger-960.webp', ...PRECACHE_ASSETS];
+const SHELL = [
+  '/', '/demo/', '/privacy/', '/terms/', '/404.html',
+  '/assets/hero-ledger-640.webp', '/assets/hero-ledger-960.webp',
+  '/assets/walkthrough-open-sample.jpg', '/assets/walkthrough-name-filter.jpg', '/assets/walkthrough-export-result.jpg',
+  ...PRECACHE_ASSETS
+];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL)).then(() => self.skipWaiting()));

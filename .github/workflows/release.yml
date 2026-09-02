@@ -272,10 +272,10 @@ jobs:
           set -eu
           {
             echo "Source commit: $SOURCE_COMMIT"
-            if [ "$MACOS_SIGNED" = true ]; then echo 'macOS signing: verified and notarized'; else echo 'macOS signing: unsigned (operator certificate unavailable)'; fi
-            if [ "$WINDOWS_SIGNED" = true ]; then echo 'Windows signing: verified'; else echo 'Windows signing: unsigned (operator certificate unavailable)'; fi
+            if [ "$MACOS_SIGNED" = true ]; then echo 'macOS signing: verified and notarized'; else echo 'macOS signing: unsigned (approved operator-certificate deviation for this release)'; fi
+            if [ "$WINDOWS_SIGNED" = true ]; then echo 'Windows signing: verified'; else echo 'Windows signing: unsigned (approved operator-certificate deviation for this release)'; fi
             echo
-            echo 'SHA256SUMS and latest.json describe every published asset. Unsigned packages are labelled as unsigned; no signature is claimed for them.'
+            echo 'SHA256SUMS and latest.json describe every published asset. Unsigned packages are labelled before download; no signature is claimed for them.'
           } > release-notes.md
       - uses: softprops/action-gh-release@v2
         with:

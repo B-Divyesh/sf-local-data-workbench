@@ -58,6 +58,8 @@ The landing hero uses one original editorial still life: a long folded strip of 
 
 Asset generation spec: `stylized-concept`, landing-page hero illustration, no text, no watermark, no logos. Generated with the factory Azure image deployment (`factory-image`) on 2026-08-28 using `/opt/fleet/lib/gen-image.sh`. The selected source and its JSON prompt sidecar live in `assets/src/`; optimized WebP/AVIF derivatives ship in the site. Generated imagery is original for this product.
 
+The landing walkthrough uses three original product screenshots captured from the shipped desktop UI at 1440×900 with `npm run capture:walkthrough`. They show the bundled sample, the named-filter dialog, and the filtered CSV export state. Dynamic build metadata is hidden in the third capture so the evergreen screenshot cannot misidentify a later immutable release. No external imagery or user data appears in these frames.
+
 ## Accessibility and performance intent
 
 Ink/paper contrast is 15.4:1; faded ink/paper is above 6:1; oxblood/paper is above 7:1. Color never carries status alone. The hero has explicit dimensions and meaningful alt text. No runtime font or image CDN is used. The mobile WebP target is ≤120 KB and desktop ≤300 KB.

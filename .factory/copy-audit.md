@@ -46,8 +46,11 @@ no banned plain-words terms.
 | Signing status loads with the release. | 6 | pass |
 | The installer checks the release version, source commit, and SHA-256 before installing. | 12 | pass |
 | See the sample project in three steps. | 8 | pass |
+| The desktop app shows five monthly orders with source details, a preview table, and column profiles. | 15 | pass |
 | Monthly orders appears with types and totals. | 7 | pass |
+| The desktop app filter dialog names a step that keeps orders whose status is shipped. | 14 | pass |
 | Keep only completed rows with a named step. | 9 | pass |
+| The desktop app shows three filtered orders and confirms the CSV export in its status bar. | 15 | pass |
 | Download the transformed sample without touching a real file. | 9 | pass |
 | It opens, filters, and exports a selected fixture while recording no request to another origin. | 14 | pass |
 | Its SHA-256 checksum is published, but no macOS or Windows signature is claimed. | 14 | pass |

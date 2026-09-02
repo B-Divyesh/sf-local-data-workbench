@@ -5,7 +5,7 @@ import { execFileSync } from 'node:child_process';
 
 const RELEASE_API = 'https://api.github.com/repos/B-Divyesh/sf-local-data-workbench/releases/latest';
 const CANDIDATE = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
-const VERSION = '0.1.12';
+const VERSION = '0.1.13';
 
 async function mockRelease(page: Page, body: object = {
   tag_name: `v${VERSION}`, body: `Source commit: ${CANDIDATE}\nmacOS signing: unsigned (operator certificate unavailable)\nWindows signing: unsigned (operator certificate unavailable)`, assets: [
@@ -42,6 +42,13 @@ test('@claim:sample-demo landing page has a one-click isolated sample path', asy
   const results = await new AxeBuilder({ page }).analyze();
   expect(results.violations.filter((item) => ['serious', 'critical'].includes(item.impact ?? ''))).toEqual([]);
   expect(errors.filter((message) => !message.includes('WebSocket') && !message.includes('[vite] failed to connect'))).toEqual([]);
+});
+
+test('@claim:platform-download-detection landing selects the current operating system package', async ({ page }) => {
+  await mockRelease(page);
+  await page.goto('http://127.0.0.1:4173/');
+  await expect(page.locator('#primary-download')).toHaveText(/Download for Linux/);
+  await expect(page.locator('#primary-download')).toHaveAttribute('href', new RegExp(`Local\.Data\.Workbench_${VERSION.replaceAll('.', '\\.')}.*\.AppImage$`));
 });
 
 test('@regression:installer-command-regions @claim:installer-command-access installer command regions are labelled, keyboard-focusable, and have no Axe scroll finding', async ({ page }) => {
@@ -157,6 +164,20 @@ test('@regression:wordmark-accessible-name visible wordmark text is contained in
   expect(results.violations).toEqual([]);
 });
 
+test('@claim:desktop-walkthrough @regression:desktop-screenshot-walkthrough landing shows three real captioned app frames', async ({ page }) => {
+  await mockRelease(page);
+  await page.goto('http://127.0.0.1:4173/');
+  const frames = page.locator('.walkthrough-list figure');
+  await expect(frames).toHaveCount(3);
+  for (const frame of await frames.all()) {
+    await expect(frame.locator('figcaption')).not.toBeEmpty();
+    const image = frame.locator('img');
+    await expect(image).toHaveAttribute('alt', /\S+/);
+    await expect(image).toHaveAttribute('loading', 'lazy');
+    expect(await image.evaluate((element: HTMLImageElement) => element.complete && element.naturalWidth === 1440 && element.naturalHeight === 900)).toBe(true);
+  }
+});
+
 test('@claim:build-identity built pages identify their version and source revision', async ({ page }) => {
   await mockRelease(page);
   await page.goto('http://127.0.0.1:4173/');
@@ -183,7 +204,7 @@ test('@claim:offline-reload @regression:offline-demo-cold-landing landing and sa
   await page.goto('http://127.0.0.1:4173/');
   await page.evaluate(async () => { await navigator.serviceWorker.ready; });
   await page.reload();
-  expect(await page.evaluate(async () => caches.keys())).toEqual(['local-data-workbench-site-v4']);
+  expect(await page.evaluate(async () => caches.keys())).toEqual(['local-data-workbench-site-v5']);
   await context.setOffline(true);
   await page.reload();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(/Inspect local data files/);
@@ -196,7 +217,7 @@ test('@claim:offline-reload @regression:offline-demo-cold-landing landing and sa
   await context.close();
 });
 
-test('@regression:browser-preview-export workbench describes bounded browser export honestly', async ({ page }) => {
+test('@claim:browser-preview-limit @regression:browser-preview-export workbench describes bounded browser export honestly', async ({ page }) => {
   await page.goto('http://127.0.0.1:1420/');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(/Inspect local/);
   await expect(page.locator('#access-badge')).toHaveText('All tools included');

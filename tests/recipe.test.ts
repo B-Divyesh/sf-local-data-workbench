@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { applyPreview, validateRecipeSteps } from '../src/recipe';
-import type { RecipeStep } from '../src/types';
+import type { Recipe, RecipeStep } from '../src/types';
 
 const source = { headers: ['name', 'status', 'amount'], rows: [[' Ada ', 'keep', '10'], ['Bob', 'drop', '4']] };
 
@@ -25,16 +25,23 @@ describe('portable recipe execution', () => {
     expect(validateRecipeSteps(source.headers, steps)[0]).toMatch(/must be a number/);
   });
 
-  it('@claim:portable-recipes keeps an ordered portable recipe after JSON save and reopen', () => {
-    const recipe = {
+  it('@claim:portable-recipes keeps source identity but no rows, supports an edited path, and replays ordered steps', () => {
+    const recipe: Recipe = {
       schema: 'local-data-workbench/recipe@1',
       name: 'Approved people',
+      created_at: '2026-09-02T00:00:00.000Z',
+      updated_at: '2026-09-02T00:00:00.000Z',
       source: { path: '/local/people.csv', name: 'people.csv', format: 'csv', fingerprint: 'abc123' },
       steps: [{ type: 'filter', name: 'Keep approved', column: 'status', operator: 'equals', value: 'keep' }]
-    } as const;
-    const reopened = JSON.parse(JSON.stringify(recipe)) as typeof recipe;
+    };
+    const saved = JSON.stringify(recipe);
+    expect(saved).not.toContain(' Ada ');
+    expect(saved).not.toContain('Bob');
+    const reopened = JSON.parse(saved) as Recipe;
+    reopened.source.path = '/moved/people.csv';
     expect(reopened.schema).toBe('local-data-workbench/recipe@1');
+    expect(reopened.source.path).toBe('/moved/people.csv');
     expect(reopened.source.fingerprint).toBe('abc123');
-    expect(applyPreview(source, reopened.steps as unknown as RecipeStep[]).rows).toEqual([[' Ada ', 'keep', '10']]);
+    expect(applyPreview(source, reopened.steps).rows).toEqual([[' Ada ', 'keep', '10']]);
   });
 });

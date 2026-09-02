@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
-import { assertReleaseContract } from './release-contract.mjs';
+import { assertPublishedSite, assertReleaseContract } from './release-contract.mjs';
 
 const repository = 'B-Divyesh/sf-local-data-workbench';
 const site = 'https://local-data-workbench.sociobot.in';
@@ -38,12 +38,7 @@ const home = await (await checkedFetch(`${site}/`)).text();
 if (!home.includes('data-build-id')) throw new Error('Live site footer has no build identity target.');
 const scripts = [...home.matchAll(/<script[^>]+src="([^"]+\.js)"/g)].map((match) => new URL(match[1], site).href);
 const bundles = await Promise.all(scripts.map(async (url) => (await checkedFetch(url)).text()));
-if (!bundles.some((bundle) => bundle.includes(commit) && bundle.includes(version))) throw new Error('Live site does not identify this checkout.');
-for (const installer of ['install.sh', 'install.ps1']) {
-  const source = await (await checkedFetch(`${site}/${installer}`)).text();
-  if (!source.includes(commit) || !source.includes(tag) || source.includes('/releases/latest/download') || source.includes('__LDW_')) {
-    throw new Error(`Live ${installer} is not pinned to this release.`);
-  }
-}
+const installers = await Promise.all(['install.sh', 'install.ps1'].map((name) => checkedFetch(`${site}/${name}`).then((response) => response.text())));
+assertPublishedSite({ bundles, installers, expectedCommit: commit, expectedTag: tag, expectedVersion: version });
 
 console.log(`Verified ${tag} at ${commit}: ${release.assets.length} assets; Linux SHA-256 ${linuxHash}; live site and installers match.`);

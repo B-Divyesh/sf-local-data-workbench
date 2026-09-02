@@ -25,7 +25,7 @@ npm run dev:site     # landing site on :5173
 npm run tauri dev    # native desktop app
 ```
 
-Browser development mode supports a bounded CSV/JSON preview. Parquet, complete-file export, native file dialogs, and recipe reopening use the Rust desktop core.
+Browser development mode provides the bounded preview covered by the claim tests. The installed build runs the registered native-engine claims through the Rust core.
 
 ## Test and build
 
@@ -60,3 +60,5 @@ Recipes declare `local-data-workbench/recipe@1`, source path/name/format/fingerp
 The demo request log, selected-file privacy check, offline reload, complete native export, and package-notice checks are listed in [.factory/claims.json](.factory/claims.json). See the shipped [privacy notice](site/privacy/index.html), [terms](site/terms/index.html), MIT [license](LICENSE), and [third-party notices](THIRD_PARTY_NOTICES.md). Desktop bundles include the application license, Apache 2.0 license, and third-party notice file.
 
 The visual system and generated-asset provenance are documented in [.factory/design.md](.factory/design.md).
+
+The three-frame landing walkthrough is captured from the sample desktop UI with `npm run capture:walkthrough` while the app development server is running.

@@ -3,12 +3,13 @@ import { describe, expect, it } from 'vitest';
 // The production verifier is a plain Node module so the same assertions run
 // without a TypeScript loader in `npm run test:release-live`.
 // @ts-expect-error The runtime module intentionally has no declaration file.
-import { assertReleaseContract } from '../scripts/release-contract.mjs';
+import { assertPublishedSite, assertReleaseContract } from '../scripts/release-contract.mjs';
 
 const current = 'ca99711ec6ac723f97f86a5a7f663d4e233e7450';
 const stale = '4267e98fe7427dd0b62a32ea0d922b74778b46af';
-const tag = 'v0.1.12';
-const packageName = 'Local.Data.Workbench_0.1.12_amd64.AppImage';
+const unavailable = '6db1a5e829037728a2c124c83f390fbb9235e350';
+const tag = 'v0.1.13';
+const packageName = 'Local.Data.Workbench_0.1.13_amd64.AppImage';
 const digest = 'a'.repeat(64);
 
 function fixture(commit = current) {
@@ -18,9 +19,9 @@ function fixture(commit = current) {
       body: `Source commit: ${commit}`,
       assets: [
         { name: packageName, digest: `sha256:${digest}` },
-        { name: 'Local.Data.Workbench_0.1.12_aarch64.dmg', digest: `sha256:${digest}` },
-        { name: 'Local.Data.Workbench_0.1.12_x64.dmg', digest: `sha256:${digest}` },
-        { name: 'Local.Data.Workbench_0.1.12_x64-setup.exe', digest: `sha256:${digest}` },
+        { name: 'Local.Data.Workbench_0.1.13_aarch64.dmg', digest: `sha256:${digest}` },
+        { name: 'Local.Data.Workbench_0.1.13_x64.dmg', digest: `sha256:${digest}` },
+        { name: 'Local.Data.Workbench_0.1.13_x64-setup.exe', digest: `sha256:${digest}` },
         { name: 'latest.json', digest: `sha256:${digest}` },
         { name: 'SHA256SUMS', digest: `sha256:${digest}` }
       ]
@@ -30,16 +31,16 @@ function fixture(commit = current) {
       commit,
       platforms: {
         linux: entry(packageName),
-        'mac-arm64': entry('Local.Data.Workbench_0.1.12_aarch64.dmg'),
-        'mac-x64': entry('Local.Data.Workbench_0.1.12_x64.dmg'),
-        windows: entry('Local.Data.Workbench_0.1.12_x64-setup.exe')
+        'mac-arm64': entry('Local.Data.Workbench_0.1.13_aarch64.dmg'),
+        'mac-x64': entry('Local.Data.Workbench_0.1.13_x64.dmg'),
+        windows: entry('Local.Data.Workbench_0.1.13_x64-setup.exe')
       }
     },
     sumsText: [
       packageName,
-      'Local.Data.Workbench_0.1.12_aarch64.dmg',
-      'Local.Data.Workbench_0.1.12_x64.dmg',
-      'Local.Data.Workbench_0.1.12_x64-setup.exe'
+      'Local.Data.Workbench_0.1.13_aarch64.dmg',
+      'Local.Data.Workbench_0.1.13_x64.dmg',
+      'Local.Data.Workbench_0.1.13_x64-setup.exe'
     ].map((name) => `${digest}  ${name}`).join('\n'),
     taggedCommit: { sha: commit },
     expectedTag: tag,
@@ -68,6 +69,15 @@ describe('published release identity', () => {
 
   it('@regression:release-candidate-provenance accepts one identity across tag, notes, manifest, packages, and checksums', () => {
     expect(() => assertReleaseContract(fixture())).not.toThrow();
+  });
+
+  it('@regression:verification-9-live-stamp rejects the exact unavailable live revision split', () => {
+    const live = {
+      bundles: [`const version="0.1.13",build="${unavailable}"`],
+      installers: [`EXPECTED_COMMIT="${unavailable}"\nEXPECTED_VERSION="${tag}"`]
+    };
+    expect(() => assertPublishedSite({ ...live, expectedCommit: current, expectedTag: tag, expectedVersion: '0.1.13' }))
+      .toThrow('Live site does not identify this checkout.');
   });
 
   it('@regression:release-version-lock keeps package, desktop, and site versions aligned', async () => {

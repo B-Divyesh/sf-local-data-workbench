@@ -88,8 +88,8 @@ describe('installer verification', () => {
     expect(workflow).toContain('codesign --verify --deep --strict');
     expect(workflow).toContain('spctl --assess --type open');
     expect(workflow).toContain('signtool verify /pa /all /v');
-    expect(workflow).toContain("macOS signing: unsigned (operator certificate unavailable)");
-    expect(workflow).toContain("Windows signing: unsigned (operator certificate unavailable)");
+    expect(workflow).toContain("macOS signing: unsigned (approved operator-certificate deviation for this release)");
+    expect(workflow).toContain("Windows signing: unsigned (approved operator-certificate deviation for this release)");
     expect(workflow).toContain('unset APPLE_CERTIFICATE APPLE_CERTIFICATE_PASSWORD APPLE_SIGNING_IDENTITY');
     expect(workflow).not.toContain("if: needs.signing-readiness.outputs.macos == 'true'\n    strategy");
   });

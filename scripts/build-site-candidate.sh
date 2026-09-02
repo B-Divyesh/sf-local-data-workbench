@@ -21,6 +21,12 @@ if [ "$CURRENT_COMMIT" != "$EXPECTED_COMMIT" ]; then
   exit 1
 fi
 
+if ! git diff --quiet HEAD -- || ! git diff --cached --quiet HEAD -- || [ -n "$(git ls-files --others --exclude-standard)" ]; then
+  echo "Refusing to build: the checkout has source changes outside $EXPECTED_COMMIT." >&2
+  echo "Build the candidate from a clean clone or isolated clean worktree." >&2
+  exit 1
+fi
+
 VITE_BUILD_ID="$EXPECTED_COMMIT" SITE_OUTPUT_DIR="$OUTPUT_DIRECTORY" npm run build:site
 
 test -f "$OUTPUT_DIRECTORY/index.html"

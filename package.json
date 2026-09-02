@@ -1,6 +1,6 @@
 {
   "name": "local-data-workbench",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "private": true,
   "type": "module",
   "scripts": {
@@ -15,6 +15,7 @@
     "test:e2e": "playwright test",
     "test:release-live": "node scripts/verify-published-release.mjs",
     "test:bundle-notices": "sh scripts/check-bundle-notices.sh",
+    "capture:walkthrough": "node scripts/capture-walkthrough.mjs",
     "tauri": "tauri"
   },
   "dependencies": {

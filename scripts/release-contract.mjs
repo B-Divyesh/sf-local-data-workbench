@@ -54,3 +54,16 @@ export function assertReleaseContract({ release, manifest, sumsText, taggedCommi
 
   return { byName, sums };
 }
+
+/** Validate the separately deployed site and both one-line installers. */
+export function assertPublishedSite({ bundles, installers, expectedCommit, expectedTag, expectedVersion }) {
+  if (!bundles.some((bundle) => bundle.includes(expectedCommit) && bundle.includes(expectedVersion))) {
+    throw new Error('Live site does not identify this checkout.');
+  }
+  for (const source of installers) {
+    if (!source.includes(expectedCommit) || !source.includes(expectedTag)
+      || source.includes('/releases/latest/download') || source.includes('__LDW_')) {
+      throw new Error('A live installer is not pinned to this release.');
+    }
+  }
+}
