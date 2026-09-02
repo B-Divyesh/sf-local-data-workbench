@@ -42,7 +42,7 @@ Results:
 - Vitest: 11 passed; Rust: 7 passed.
 - Playwright: 36 passed across desktop Chromium and 390 px mobile.
 - TypeScript, rustfmt, and Clippy with warnings denied: passed.
-- Production build: site JavaScript 5.48 KB raw total, site CSS 12.72 KB raw, app JavaScript 20.38 KB raw, app CSS 11.37 KB raw. The 640 px hero is 16.17 KB.
+- Production build: landing JavaScript 5.48 KB raw on first load, site CSS 12.72 KB raw, app JavaScript 20.38 KB raw, app CSS 11.37 KB raw. The 640 px hero is 16.17 KB.
 - Debian package/consumer check: built `Local Data Workbench_0.1.10_amd64.deb` and found the MIT license, third-party notices, and Apache 2.0 notice in the package.
 - First viewport: action and three facts fit at 1440×900 and 390×844; horizontal overflow was 0 px. Evidence is in `.factory/repair-artifacts/`.
 - Accessibility: all route/state Axe scans had zero serious or critical findings, including the explicit accessible-name rule. Keyboard focus, reduced motion, 200% text, and 44 px target checks passed.
