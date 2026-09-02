@@ -8,12 +8,18 @@ function buildId(): string {
   catch { return 'unversioned-source'; }
 }
 
+function outputDir(): string {
+  // The release repair builds into an isolated directory before deployment so
+  // it never reuses a stale `dist/site` from a different checkout.
+  return process.env.SITE_OUTPUT_DIR ? resolve(process.env.SITE_OUTPUT_DIR) : '../dist/site';
+}
+
 export default defineConfig({
   root: 'site',
   publicDir: '../public',
   base: '/',
   build: {
-    outDir: '../dist/site',
+    outDir: outputDir(),
     emptyOutDir: true,
     target: 'es2022',
     rollupOptions: {

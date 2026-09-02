@@ -37,7 +37,7 @@ npm run tauri build  # current-platform desktop bundle
 npm run test:bundle-notices # builds a Debian bundle and checks its notices
 ```
 
-The static factory deploy publishes `dist/site` (with `index.html` at that root). GitHub Actions builds Linux, macOS, and Windows packages from the tagged commit. macOS and Windows packages are signed only when the operator supplies the required certificates; otherwise they are published as unsigned and labelled that way. Release builds receive the immutable Git commit as `VITE_BUILD_ID`; the app and site footer display it.
+The static factory deploy publishes `dist/site`, with `index.html` at its root. Check out a released candidate in an isolated worktree. Build it with `sh scripts/build-site-candidate.sh <40-character-commit> <output-directory>`. The command refuses a mismatched checkout and verifies the embedded revision before deployment. GitHub Actions builds Linux, macOS, and Windows packages from the tagged commit. macOS and Windows packages are signed only when the operator supplies the required certificates. Otherwise they are published as unsigned and labelled that way. Release builds receive the immutable Git commit as `VITE_BUILD_ID`. The app and site footer display it.
 
 ## Install
 

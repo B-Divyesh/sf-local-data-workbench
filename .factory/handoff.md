@@ -1,112 +1,98 @@
-# Verification 5 handoff — FAIL
-
-Candidate `d456abfd26315cc15e9c4bcb13c1638243d13557` passes all 26 declared
-claims, clean tests/builds/lints, native Debian bundle-notice inspection, and
-release checksum verification. Its independent verification is recorded in
-`.factory/verification-5.md`.
-
-The live footer is instead `0.1.9 · fbfd730b2b702242ba4012d94a237ba8d55e5604`.
-That stale deployment correctly withholds downloads because its build identity
-does not match the published `v0.1.9` candidate release. **Do not release this
-candidate: deploy its exact `dist/site` output with `VITE_BUILD_ID=d456…`, then
-verify the live footer and enabled release state.**
-
----
-
 # Repair handoff — Local Data Workbench 0.1.9
 
-## Released repair
+## Outcome
 
-The release-provenance failure in independent verification 4 is repaired and
-published.
+Independent verification 5's only release blocker is repaired: the public
+static site now is the exact `d456abfd26315cc15e9c4bcb13c1638243d13557`
+candidate built with that value in `VITE_BUILD_ID`.
 
-- Repaired candidate: `d456abfd26315cc15e9c4bcb13c1638243d13557`
-- Git tag and release: `v0.1.9`
+- Candidate and v0.1.9 release: `d456abfd26315cc15e9c4bcb13c1638243d13557`
 - Release: <https://github.com/B-Divyesh/sf-local-data-workbench/releases/tag/v0.1.9>
 - Live site: <https://local-data-workbench.sociobot.in>
-- Static deployment: Azure Static Web Apps deployment
-  `df44261d-b73f-488d-9893-6219d8fc435e`
+- Static Web App deployment ID: `18834203-9e83-4f76-8ba4-fa3470c118b0`
 
-The release workflow resolves the tag to one immutable commit before every
-platform build, checks out that commit in each build job, injects it as
-`VITE_BUILD_ID`, confirms the tag again before publishing, and builds
-`SHA256SUMS` plus `latest.json` from the upload filenames. The landing page
-only enables downloads when the GitHub release's source-commit line, version,
-checksums, and complete platform set match its own build ID. The regression
-test reproduces the former stale-release condition and asserts the page keeps
-all downloads disabled.
+The failure was reproduced before deployment. The previous public page loaded
+`/assets/main-DkpMe4yK.js`, which embedded
+`fbfd730b2b702242ba4012d94a237ba8d55e5604`, while the v0.1.9 GitHub release
+declared `d456abf…`. Its safe release check therefore disabled download links.
 
-`v0.1.9` contains Linux RPM/AppImage/DEB, macOS arm64/x64 DMGs, and Windows
-MSI/EXE. Its release notes, `latest.json`, and deployed page all name the
-same source revision above. GitHub's asset digests match each of the seven
-`SHA256SUMS` entries, and every platform item in `latest.json` uses that same
-name and SHA-256. A downloaded Debian artifact was verified against the
-published manifest:
+The deployed isolated candidate worktree emitted the verifier-expected
+`main-BF7Afm8a.js` and `demo-BDBYITes.js`. Production now loads
+`main-BF7Afm8a.js`; its SHA-256 is
+`b4c1c4096e713caf1ea912ef7d466d6473f3ab13b62f50f629f859ed76c446c8` and it
+embeds the full candidate revision. The live `index.html` SHA-256 is
+`3cc735ad96d1049fa6dafc4633413f1530e27fff2153c0f880ce9adae2ffc2f8`.
+
+In a fresh live browser context the footer reads:
 
 ```text
-Local.Data.Workbench_0.1.9_amd64.deb
-SHA-256 2384b85261c98755fa3d0e24e8f5f3ba9669b3842cfa236d4b9f349210c7fc5c
+0.1.9 · d456abfd26315cc15e9c4bcb13c1638243d13557
 ```
 
-The published Debian package includes `LICENSE`, `THIRD_PARTY_NOTICES.md`,
-`LICENSES/Apache-2.0.txt`, and the bundled sample data.
+Release metadata says `v0.1.9 matches this page’s source commit`, and the
+Linux AppImage download is enabled. The release API and page therefore prove
+the candidate, release metadata, and deployed site identify one revision.
 
-## Signing status
+## Repair implementation
 
-macOS and Windows packages are published as **unsigned**. Release metadata,
-release notes, download labels, and one-line installers all say this plainly;
-no signing claim is made. The product's paid-license path remains unavailable
-until signed macOS and Windows packages are verified.
+- Added `scripts/build-site-candidate.sh`. It requires a 40-character source
+  commit, refuses to build if `HEAD` differs, uses an isolated output
+  directory, injects `VITE_BUILD_ID`, and verifies the built JS contains that
+  exact revision.
+- `vite.site.config.ts` accepts `SITE_OUTPUT_DIR`, allowing a candidate artifact
+  to be built outside a potentially stale `dist/site`.
+- Added `tests/site-deployment.test.ts` with the
+  `@regression:stale-static-deployment` test. It reproduces the root class of
+  failure by requesting a different checkout (which must fail), then proves an
+  isolated artifact embeds the exact checked-out source revision.
+- Documented the guarded candidate build in `README.md`.
 
-Signed/notarized macOS releases require `APPLE_CERTIFICATE`,
-`APPLE_CERTIFICATE_PASSWORD`, `APPLE_SIGNING_IDENTITY`, `APPLE_API_KEY`,
-`APPLE_API_KEY_ID`, and `APPLE_API_ISSUER`. Signed Windows releases require
-`WINDOWS_CERT_PFX` and `WINDOWS_CERT_PASSWORD` (and may use
-`WINDOWS_TIMESTAMP_URL`). Those operator credentials were not read, created,
-or assumed.
-
-## Verification evidence
-
-All checks below ran after a clean `npm ci`:
+To build a future release candidate safely:
 
 ```sh
-npm test
+git worktree add --detach /tmp/local-data-workbench-candidate <candidate-sha>
+cd /tmp/local-data-workbench-candidate
+npm ci --include=dev
+sh scripts/build-site-candidate.sh <candidate-sha> /tmp/local-data-workbench-site
+```
+
+Deploy only that output directory.
+
+## Verification
+
+After a clean `npm ci --include=dev`, all checks passed:
+
+```sh
+npm test                              # 10 Vitest + 7 Rust tests
 npx --no-install tsc --noEmit
 cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
 cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets --all-features -- -D warnings
-cargo test --manifest-path src-tauri/Cargo.toml --all-features
-npm run build
-npm run test:e2e
+npm run build                         # dist/app and dist/site
+npm run test:e2e                      # 36/36 desktop + 390 px checks
 CI=true npm run test:bundle-notices
 ```
 
-They passed. The browser suite ran 36 checks at desktop and 390 px, including
-the two-viewport stale-provenance regression, keyboard focus, direct
-Playwright Axe scans, demo isolation, privacy request recording, offline
-reload, and unsigned-package disclosure. The Debian consumer-package check
-rebuilt the installer and checked the three required license files.
+All 26 commands in `.factory/claims.json` were also invoked exactly as
+registered and passed. The bundle inspection found `LICENSE`,
+`THIRD_PARTY_NOTICES.md`, and `LICENSES/Apache-2.0.txt` inside the rebuilt
+Debian package.
 
-`/opt/fleet/lib/verify-url.sh` passed both against the local production
-preview and the public URL. The live result was title
-`Local Data Workbench — Inspect local data files`, `lang=en`, one H1, a main
-landmark, no missing image alt text, no unlabeled buttons, and no page or
-console errors. Direct public Playwright checks at 1366 px and 390 px opened
-the isolated demo, found the active `v0.1.9` AppImage link, and reported zero
-serious/critical Axe findings. A fresh live browser context also reloaded the
-landing page offline with the correct H1 and zero console errors.
+`/opt/fleet/lib/verify-url.sh` passed against the live URL: title, `lang=en`,
+one h1, main landmark, alt text, and no console/page errors. Live Playwright
+Axe scans found zero `wcag2a`/`wcag2aa` violations at desktop and 390 px. A
+fresh live service-worker context updated, reloaded offline, preserved the
+h1, and had no console errors. Its only request origins were the product and
+the disclosed GitHub release API.
 
-The public `index.html` SHA-256 is
-`3cc735ad96d1049fa6dafc4633413f1530e27fff2153c0f880ce9adae2ffc2f8` both
-locally and after deployment. Its main application bundle SHA-256 is
-`b4c1c4096e713caf1ea912ef7d466d6473f3ab13b62f50f629f859ed76c446c8` in
-both places, and it contains build ID `d456abf…`. The live CSP limits scripts,
-styles, and assets to same-origin and permits only GitHub's API for release
-metadata.
+Production response policy was checked: HSTS, `nosniff`, strict-origin
+referrer policy, permissions policy, and a CSP limiting content to same-origin
+plus `https://api.github.com`, with `frame-ancestors 'none'`.
 
-## Known gap / next operator action
+## Known gap / operator action
 
-The researched brief asks for signed desktop installers. The release has
-honest unsigned macOS and Windows artifacts because the required operator
-certificates are unavailable. Add the listed signing secrets and publish a
-new tagged release to meet that stronger requirement; do not relabel this
-release as signed.
+macOS and Windows v0.1.9 packages remain honestly labelled **unsigned**. The
+brief's signed-installer goal still requires the operator-provided
+`APPLE_CERTIFICATE`, `APPLE_CERTIFICATE_PASSWORD`, `APPLE_SIGNING_IDENTITY`,
+`APPLE_API_KEY`, `APPLE_API_KEY_ID`, `APPLE_API_ISSUER`, `WINDOWS_CERT_PFX`,
+and `WINDOWS_CERT_PASSWORD` secrets. No credentials were read, created, or
+assumed during this repair.
