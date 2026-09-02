@@ -1,4 +1,4 @@
-# Landing copy audit — 2026-09-01
+# Landing copy audit — 2026-09-02
 
 Source: `site/index.html`. Counts exclude punctuation, code, and the generated
 release version. Every sentence is at most 22 words. The landing page contains
@@ -12,9 +12,13 @@ no banned plain-words terms.
 | Try it with sample data | 6 | pass |
 | Opens an isolated sample project. | 5 | pass |
 | Checking desktop downloads | 3 | pass |
+| Files stay on your device. | 5 | pass |
+| Works offline after the first visit. | 6 | pass |
+| Free. No account needed. | 4 | pass |
 | Sample opens in one click | 5 | pass |
 | Sample data stays in the page | 6 | pass |
 | Recipes are JSON files | 4 | pass |
+| Downloads match this build | 4 | pass |
 | Every package shows its checksum and signing status. | 8 | pass |
 | macOS and Windows may be unsigned until operator certificates are available. | 10 | pass |
 | Turn a source file into a repeatable result. | 9 | pass |
@@ -32,14 +36,15 @@ no banned plain-words terms.
 | Portable recipe file | 3 | pass |
 | Test local file work before you rely on it. | 10 | pass |
 | The browser-workbench check opens, filters, and exports a selected fixture without a request to another origin. | 15 | pass |
-| Use the free local workbench today. | 7 | pass |
-| Inspect files, transform rows, save three recipes, reopen recipes, and export CSV without a paid license. | 16 | pass |
-| Paid access paused | 3 | pass |
-| No checkout or license verification is offered until signed macOS and Windows installers are verified. | 15 | pass |
+| Use every local tool for free. | 6 | pass |
+| Inspect files, join reference data, save recipes, reopen them, and export CSV or JSON Lines. | 15 | pass |
+| Free | 1 | pass |
+| No account needed | 3 | pass |
+| This release has no checkout, license token, or locked data tool. | 11 | pass |
 | macOS packages are being published. | 5 | pass |
 | Windows packages are being published. | 5 | pass |
 | Signing status loads with the release. | 6 | pass |
-| The installer verifies SHA-256 before placing the AppImage in ~/.local/bin. | 10 | pass |
+| The installer checks the release version, source commit, and SHA-256 before installing. | 12 | pass |
 | See the sample project in three steps. | 8 | pass |
 | Monthly orders appears with types and totals. | 7 | pass |
 | Keep only completed rows with a named step. | 9 | pass |
@@ -62,5 +67,5 @@ signed or unsigned package status.
 | Ordered changes | recipe |
 | Result | output / export |
 | Sample mode | demo / sample project |
-| Free product | free desk |
+| Included product | free release |
 | Data summary | profile |
