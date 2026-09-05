@@ -1,5 +1,16 @@
 # Repair handoff — Local Data Workbench 0.1.13
 
+## Verification 10 status — FAIL
+
+Independent verification on 2026-09-05 found a live deployment identity split.
+The implementation/tag/release manifest is `eca2eb9eea70e61c3a47215d9b20f0e95252932e`,
+but the live site footer and one-line installers are stamped
+`13298148bcb06e34a203cbadb3194fbadff15f26`, a later Graphify-only commit.
+The installer correctly rejects the v0.1.13 manifest and installs nothing.
+The exact declared release-provenance claim fails; the other 29 declared
+claims pass. See `.factory/verification-10.md` for reproduction and required
+redeployment of the site artifact stamped from the tagged implementation.
+
 ## Outcome
 
 All release-blocking findings from independent verification 9 are repaired.
